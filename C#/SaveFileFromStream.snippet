@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>SaveFileFromStream</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>filename</ID>
+          <ToolTip>File to save</ToolTip>
+          <Default>C:\file1.data</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[
+          private void SaveFile(Stream responseStream)
+        {
+            string downloadFilePath = "$filename$";
+
+            using (FileStream outstream = File.Open(downloadFilePath, FileMode.Create, FileAccess.Write))
+            {
+                using (Stream downloadStream = responseStream)
+                {
+                    downloadStream.CopyTo(outstream);
+                }
+            }
+        }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

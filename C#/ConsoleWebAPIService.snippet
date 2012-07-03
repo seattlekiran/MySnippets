@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>ConsoleWebAPIService</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using System.Web.Http;
+using System.Web.Http.SelfHost;
+
+namespace ConsoleApplication1
+{
+    class Program
+    {
+        static string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
+
+        static void Main(string[] args)
+        {
+            HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
+            config.Routes.MapHttpRoute("Default", "{controller}/{action}", new { controller = "SampleTests" });
+
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+
+            Utility.UpdateConfig(config);
+
+            HttpSelfHostServer server = new HttpSelfHostServer(config);
+            server.OpenAsync().Wait();
+
+            Console.WriteLine("Service listenting at address: {0}",  baseAddress);
+            Console.ReadLine();
+
+            server.CloseAsync().Wait();
+        }
+    }
+
+    public class SampleTestsController : ApiController
+    {
+        public string PostString([FromBody]string input)
+        {
+            return input;
+        }
+
+        public string GetString()
+        {
+            return "Hello";
+        }
+
+        public Order UpdateOrder(Order order)
+        {
+            return order;
+        }
+    }
+
+    public class Order : IEquatable<Order>
+    {
+        public string OrderId { get; set; }
+
+        public double OrderValue { get; set; }
+
+        public DateTime OrderedDate { get; set; }
+
+        public DateTime ShippedDate { get; set; }
+
+        public bool Equals(Order other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return ((this.OrderId == other.OrderId) && (this.OrderValue == other.OrderValue)
+                && (this.OrderedDate == other.OrderedDate) && (this.ShippedDate == other.ShippedDate));
+        }
+
+        public override bool Equals(Object obj)
+        {
+            if (obj == null)
+            {
+                return base.Equals(obj);
+            }
+
+            Order orderObj = obj as Order;
+
+            if (orderObj == null)
+            {
+                return false;
+            }
+            else
+            {
+                return this.Equals(orderObj);
+            }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("OrderId:{0}, OrderValue:{1}, OrderedDate:{2}, ShippedDate:{3}", OrderId, OrderValue, OrderedDate, ShippedDate);
+        }
+
+        public override int GetHashCode()
+        {
+            int result = 0;
+
+            if (this.OrderId != null)
+            {
+                result ^= this.OrderId.GetHashCode();
+            }
+
+            result ^= this.OrderValue.GetHashCode();
+
+            result ^= this.OrderedDate.GetHashCode();
+
+            result ^= this.ShippedDate.GetHashCode();
+
+            return result;
+        }
+    }
+    
+    public static class Utility
+    {
+        public static void UpdateConfig(HttpConfiguration config)
+        {
+            config.Formatters.Clear();
+
+            JsonMediaTypeFormatter jsonNetFormatter = new JsonMediaTypeFormatter();
+            jsonNetFormatter.SupportedMediaTypes.Clear();
+            jsonNetFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/json-jsonnet"));
+            jsonNetFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/json-jsonnet"));
+
+            JsonMediaTypeFormatter dcjsFormatter = new JsonMediaTypeFormatter();
+            dcjsFormatter.SupportedMediaTypes.Clear();
+            dcjsFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/json-dcjs"));
+            dcjsFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/json-dcjs"));
+
+            XmlMediaTypeFormatter xmlFormatter = new XmlMediaTypeFormatter();
+            xmlFormatter.SupportedMediaTypes.Clear();
+            xmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/xml-xml"));
+            xmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/xml-xml"));
+
+            XmlMediaTypeFormatter dcsXmlFormatter = new XmlMediaTypeFormatter();
+            dcsXmlFormatter.SupportedMediaTypes.Clear();
+            dcsXmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/xml-dcs"));
+            dcsXmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/xml-dcs"));
+
+            AsyncPlainTextFormatter asyncPlainTextFormatter = new AsyncPlainTextFormatter();
+            SyncPlainTextFormatter syncPlainTextFormatter = new SyncPlainTextFormatter();
+
+            config.Formatters.Add(jsonNetFormatter);
+            config.Formatters.Add(dcjsFormatter);
+            config.Formatters.Add(xmlFormatter);
+            config.Formatters.Add(dcsXmlFormatter);
+            config.Formatters.Add(asyncPlainTextFormatter);
+            config.Formatters.Add(syncPlainTextFormatter);
+        }
+    }
+
+    public class AsyncPlainTextFormatter : MediaTypeFormatter
+    {
+        public AsyncPlainTextFormatter()
+        {
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/plain-async"));
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/plain-async"));
+        }
+
+        public override bool CanReadType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override bool CanWriteType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override Task<object> ReadFromStreamAsync(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+        {
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                tcs.SetResult(string.Empty);
+                return tcs.Task;
+            }
+
+            string content = null;
+
+            using (var reader = new StreamReader(stream))
+            {
+                content = reader.ReadToEnd();
+            }
+
+            tcs.SetResult(content);
+            return tcs.Task;
+        }
+
+        public override Task WriteToStreamAsync(Type type, object value, Stream stream, HttpContent httpContent, TransportContext transportContext)
+        {
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                tcs.SetResult(null);
+                return tcs.Task;
+            }
+
+            if (value != null)
+            {
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(value.ToString());
+                    writer.Flush();
+                }
+            }
+
+            tcs.SetResult(null);
+            return tcs.Task;
+        }
+    }
+
+    public class SyncPlainTextFormatter : BufferedMediaTypeFormatter
+    {
+        public SyncPlainTextFormatter()
+        {
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/plain-sync"));
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/plain-sync"));
+        }
+
+        public override bool CanReadType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override bool CanWriteType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override object ReadFromStream(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+        {
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                return string.Empty;
+            }
+
+            string content = null;
+
+            using (var reader = new StreamReader(stream))
+            {
+                content = reader.ReadToEnd();
+            }
+
+            return content;
+        }
+
+        public override void WriteToStream(Type type, object value, Stream stream, HttpContent httpContent)
+        {
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                return;
+            }
+
+            if (value != null)
+            {
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(value.ToString());
+                    writer.Flush();
+                }
+            }
+        }
+    }
+}
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+

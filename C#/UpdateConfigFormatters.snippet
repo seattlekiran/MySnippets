@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>UpdateConfigFormatters</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[
+             using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.Http;
+using System.Web.Http.Dispatcher;
+using System.Web.Http.Controllers;
+using System.Web.Http.Filters;
+
+        public static class Utility
+        {
+        public static void UpdateConfig(HttpConfiguration config)
+        {
+            config.Formatters.Clear();
+
+            JsonMediaTypeFormatter jsonNetFormatter = new JsonMediaTypeFormatter();
+            jsonNetFormatter.SupportedMediaTypes.Clear();
+            jsonNetFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/json-jsonnet"));
+            jsonNetFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/json-jsonnet"));
+
+            JsonMediaTypeFormatter dcjsFormatter = new JsonMediaTypeFormatter();
+            dcjsFormatter.SupportedMediaTypes.Clear();
+            dcjsFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/json-dcjs"));
+            dcjsFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/json-dcjs"));
+
+            XmlMediaTypeFormatter xmlFormatter = new XmlMediaTypeFormatter();
+            xmlFormatter.SupportedMediaTypes.Clear();
+            xmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/xml-xml"));
+            xmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/xml-xml"));
+
+            XmlMediaTypeFormatter dcsXmlFormatter = new XmlMediaTypeFormatter();
+            dcsXmlFormatter.SupportedMediaTypes.Clear();
+            dcsXmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/xml-dcs"));
+            dcsXmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/xml-dcs"));
+
+            AsyncPlainTextFormatter asyncPlainTextFormatter = new AsyncPlainTextFormatter();
+            SyncPlainTextFormatter syncPlainTextFormatter = new SyncPlainTextFormatter();
+
+            config.Formatters.Add(jsonNetFormatter);
+            config.Formatters.Add(dcjsFormatter);
+            config.Formatters.Add(xmlFormatter);
+            config.Formatters.Add(dcsXmlFormatter);
+            config.Formatters.Add(asyncPlainTextFormatter);
+            config.Formatters.Add(syncPlainTextFormatter);
+        }
+        }
+        
+        public class AsyncPlainTextFormatter : MediaTypeFormatter
+    {
+        public AsyncPlainTextFormatter()
+        {
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/plain-async"));
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/plain-async"));
+        }
+
+        public override bool CanReadType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override bool CanWriteType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override Task<object> ReadFromStreamAsync(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+        {
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                tcs.SetResult(string.Empty);
+                return tcs.Task;
+            }
+
+            string content = null;
+
+            using (var reader = new StreamReader(stream))
+            {
+                content = reader.ReadToEnd();
+            }
+
+            tcs.SetResult(content);
+            return tcs.Task;
+        }
+
+        public override Task WriteToStreamAsync(Type type, object value, Stream stream, HttpContent httpContent, TransportContext transportContext)
+        {
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                tcs.SetResult(null);
+                return tcs.Task;
+            }
+
+            if (value != null)
+            {
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(value.ToString());
+                    writer.Flush();
+                }
+            }
+
+            tcs.SetResult(null);
+            return tcs.Task;
+        }
+    }
+
+    public class SyncPlainTextFormatter : BufferedMediaTypeFormatter
+    {
+        public SyncPlainTextFormatter()
+        {
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/plain-sync"));
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/plain-sync"));
+        }
+
+        public override bool CanReadType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override bool CanWriteType(Type type)
+        {
+            return (type == typeof(string));
+        }
+
+        public override object ReadFromStream(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+        {
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                return string.Empty;
+            }
+
+            string content = null;
+
+            using (var reader = new StreamReader(stream))
+            {
+                content = reader.ReadToEnd();
+            }
+
+            return content;
+        }
+
+        public override void WriteToStream(Type type, object value, Stream stream, HttpContent httpContent)
+        {
+            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
+            {
+                return;
+            }
+
+            if (value != null)
+            {
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(value.ToString());
+                    writer.Flush();
+                }
+            }
+        }
+    }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+

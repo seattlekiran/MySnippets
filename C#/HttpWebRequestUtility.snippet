@@ -1,0 +1,183 @@
+﻿<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>HttpWebRequestUtility</Title>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <ToolTip></ToolTip>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[using System;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Threading;
+using System.Configuration;
+
+public static class HttpWebRequestUtility
+{
+    class RequestContext
+    {
+        public HttpWebRequest Request { get; set; }
+        public Action<Stream> WriteToRequestStreamDelegate { get; set; }
+        public Action<Stream> ReadFromResponseStreamDelegate { get; set; }
+        public ManualResetEvent RequestDoneNotificationEvent { get; set; }
+    }
+
+    public static string GetData(string url, string acceptHeader)
+    {
+        string responseData = string.Empty;
+
+        PostStreamData(url, "Get", acceptHeader, null,
+            (requestStream) =>
+            {
+            },
+            (responseStream) =>
+            {
+                using (StreamReader sr = new StreamReader(responseStream))
+                {
+                    responseData = sr.ReadToEnd();
+                }
+            },
+            false, false);
+
+        return responseData;
+    }
+
+    public static string PostData(string url, string acceptHeader, string requestContentType, string requestContent)
+    {
+        string responseData = string.Empty;
+
+        PostStreamData(url, "Post", acceptHeader, requestContentType, (requestStream) =>
+            {
+                using (StreamWriter sw = new StreamWriter(requestStream))
+                {
+                    sw.Write(requestContent);
+                }
+            },
+            (responseStream) =>
+            {
+                using (StreamReader sr = new StreamReader(responseStream))
+                {
+                    responseData = sr.ReadToEnd();
+                }
+            },
+            true, false);
+
+        return responseData;
+    }
+
+    public static void PostStreamData(string url,
+                                        string httpMethod,
+                                        string acceptHeader,
+                                        string requestContentType,
+                                        Action<Stream> writeToRequestStreamDelegate,
+                                        Action<Stream> readFromResponseStreamDelegate,
+                                        bool allowWriteStreamBuffering = false,
+                                        bool sendChunked = true)
+    {
+        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+        request.Method = httpMethod;
+        request.Accept = acceptHeader;
+        request.ContentType = requestContentType;
+
+        // The following two settings are required if you would want to post large amounts of data
+        // without buffering at the client.
+        request.AllowWriteStreamBuffering = allowWriteStreamBuffering;
+        request.SendChunked = sendChunked;
+
+        RequestContext context = new RequestContext();
+        context.Request = request;
+        context.WriteToRequestStreamDelegate = writeToRequestStreamDelegate;
+        context.ReadFromResponseStreamDelegate = readFromResponseStreamDelegate;
+        context.RequestDoneNotificationEvent = new ManualResetEvent(false);
+
+        // note: getting a request stream would fail in case of GET method
+        if (request.Method.ToLowerInvariant() != "get")
+        {
+            IAsyncResult asyncResult = request.BeginGetRequestStream(PostStreamData_RequestStreamCallback, context);
+        }
+        else
+        {
+            IAsyncResult asyncResult = request.BeginGetResponse(PostStreamData_ResponseStreamCallback, context);
+        }
+
+        // Keep the main thread from continuing while the asynchronous
+        // operation completes. A real world application
+        // could do something useful such as updating its user interface. 
+        context.RequestDoneNotificationEvent.WaitOne();
+    }
+
+    private static void PostStreamData_RequestStreamCallback(IAsyncResult asyncResult)
+    {
+        RequestContext requestContext = (RequestContext)asyncResult.AsyncState;
+
+        Action<Stream> writeToRequestStreamDelegate = (Action<Stream>)requestContext.WriteToRequestStreamDelegate;
+
+        try
+        {
+            // End the operation
+            using (Stream postStream = requestContext.Request.EndGetRequestStream(asyncResult))
+            {
+                if (writeToRequestStreamDelegate != null)
+                {
+                    writeToRequestStreamDelegate(postStream);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception occurred while writing to Request stream:\n" + ex.ToString());
+        }
+        finally
+        {
+            requestContext.RequestDoneNotificationEvent.Set();
+        }
+
+        // Start the asynchronous operation to get the response
+        IAsyncResult asyncResponseResult = requestContext.Request.BeginGetResponse(PostStreamData_ResponseStreamCallback, requestContext);
+    }
+
+    private static void PostStreamData_ResponseStreamCallback(IAsyncResult asyncResult)
+    {
+        RequestContext requestContext = (RequestContext)asyncResult.AsyncState;
+
+        try
+        {
+            // End the operation
+            using (HttpWebResponse response = (HttpWebResponse)requestContext.Request.EndGetResponse(asyncResult))
+            {
+                Action<Stream> readFromResponseStreamDelegate = (Action<Stream>)requestContext.ReadFromResponseStreamDelegate;
+
+                if (readFromResponseStreamDelegate != null)
+                {
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        readFromResponseStreamDelegate(responseStream);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception occurred while writing to Request stream:\n" + ex.ToString());
+        }
+        finally
+        {
+            // signal that the response has been received
+            requestContext.RequestDoneNotificationEvent.Set();
+        }
+    }
+}]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

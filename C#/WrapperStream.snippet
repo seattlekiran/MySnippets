@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>WrapperStream</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[using System;
+    using System.IO;
+
+    public class WrapperStream : Stream
+    {
+        Stream innerStream = null;
+
+        public WrapperStream(Stream innerStream)
+        {
+            this.innerStream = innerStream;
+        }
+
+        public override bool CanRead
+        {
+            get
+            {
+                bool canRead = innerStream.CanRead;
+
+                Console.WriteLine("Inside CanRead:{0}", canRead);
+
+                return innerStream.CanRead;
+            }
+        }
+
+        public override bool CanSeek
+        {
+            get
+            {
+                bool canSeek = innerStream.CanSeek;
+
+                Console.WriteLine("Inside CanSeek: {0}", canSeek);
+
+                return canSeek;
+            }
+        }
+
+        public override bool CanWrite
+        {
+            get
+            {
+                bool canWrite = innerStream.CanWrite;
+
+                Console.WriteLine("Inside CanWrite:{0}", canWrite);
+
+                return canWrite;
+            }
+        }
+
+        private long totalBytesWrittenCount = 0;
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            totalBytesWrittenCount += count;
+
+            Console.WriteLine("Inside Write: count: {0}", count);
+
+            innerStream.Write(buffer, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            Console.WriteLine("Inside WriteByte");
+
+            innerStream.WriteByte(value);
+        }
+
+        public override int EndRead(IAsyncResult asyncResult)
+        {
+            currentNumberOfBytesRead = innerStream.EndRead(asyncResult);
+
+            totalBytesReadCount += currentNumberOfBytesRead;
+
+            Console.WriteLine("Inside EndRead. Number of bytes read: {0}", currentNumberOfBytesRead);
+
+            return currentNumberOfBytesRead;
+        }
+
+        public override void EndWrite(IAsyncResult asyncResult)
+        {
+            Console.WriteLine("Inside EndWrite");
+
+            innerStream.EndWrite(asyncResult);
+        }
+
+        public override void Close()
+        {
+            Console.WriteLine("Inside Close");
+
+            innerStream.Close();
+        }
+
+        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("Inside BeginRead: buffer length:{0}, offset:{1}, count:{2}", buffer.Length, offset, count);
+
+            return innerStream.BeginRead(buffer, offset, count, callback, state);
+        }
+
+        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("Inside BeginWrite");
+
+            return innerStream.BeginWrite(buffer, offset, count, callback, state);
+        }
+
+        private long totalBytesReadCount = 0;
+        int currentNumberOfBytesRead = 0;
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            currentNumberOfBytesRead = innerStream.Read(buffer, offset, count);
+
+            totalBytesReadCount += currentNumberOfBytesRead;
+
+            Console.WriteLine("Inside Read : {0}", currentNumberOfBytesRead);
+
+            return currentNumberOfBytesRead;
+        }
+
+        public override int ReadByte()
+        {
+            Console.WriteLine("Inside ReadByte");
+
+            return innerStream.ReadByte();
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            long position = innerStream.Seek(offset, origin);
+
+            Console.WriteLine("Inside Seek : position:{0}, offset: {1}, origin: {2}", position, offset, origin.ToString());
+
+            return position;
+        }
+
+        public override long Position
+        {
+            get
+            {
+                return innerStream.Position;
+            }
+            set
+            {
+                innerStream.Position = value;
+
+                Console.WriteLine("Position set at: {0}", innerStream.Position);
+            }
+        }
+
+        public override void SetLength(long value)
+        {
+            Console.WriteLine("Inside SetLength. Length set as: {0}", value);
+
+            innerStream.SetLength(value);
+        }
+
+        public override int ReadTimeout
+        {
+            get
+            {
+                return innerStream.ReadTimeout;
+            }
+            set
+            {
+                Console.WriteLine("Inside set ReadTimeout");
+
+                innerStream.ReadTimeout = value;
+            }
+        }
+
+        public override int WriteTimeout
+        {
+            get
+            {
+                return innerStream.WriteTimeout;
+            }
+            set
+            {
+                Console.WriteLine("Inside set WriteTimeout");
+
+                innerStream.WriteTimeout = value;
+            }
+        }
+
+        public override long Length
+        {
+            get
+            {
+                Console.WriteLine("Inside Length: {0}", innerStream.Length);
+
+                return innerStream.Length;
+            }
+        }
+
+        public override void Flush()
+        {
+            Console.WriteLine("Inside Flush. Total # of bytes written :{0}", totalBytesWrittenCount);
+
+            innerStream.Flush();
+        }
+
+        public override bool CanTimeout
+        {
+            get
+            {
+                Console.WriteLine("Inside CanTimeout");
+
+                return innerStream.CanTimeout;
+            }
+        }
+
+        public override object InitializeLifetimeService()
+        {
+            Console.WriteLine("Inside InitializeLifetimeService");
+
+            return innerStream.InitializeLifetimeService();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                innerStream.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+    }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

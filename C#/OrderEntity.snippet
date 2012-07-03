@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>OrderEntity</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+     public class Order : IEquatable<Order>
+    {
+        public int OrderId { get; set; }
+
+        public double OrderValue { get; set; }
+
+        public DateTime OrderedDate { get; set; }
+
+        public DateTime ShippedDate { get; set; }
+
+        public bool Equals(Order other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return ((this.OrderId == other.OrderId) && (this.OrderValue == other.OrderValue)
+                && (this.OrderedDate == other.OrderedDate) && (this.ShippedDate == other.ShippedDate));
+        }
+
+        public override bool Equals(Object obj)
+        {
+            if (obj == null)
+            {
+                return base.Equals(obj);
+            }
+
+            Order orderObj = obj as Order;
+
+            if (orderObj == null)
+            {
+                return false;
+            }
+            else
+            {
+                return this.Equals(orderObj);
+            }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("OrderId:{0}, OrderValue:{1}, OrderedDate:{2}, ShippedDate:{3}", OrderId, OrderValue, OrderedDate, ShippedDate);
+        }
+
+        public override int GetHashCode()
+        {
+            int result = 0;
+
+            result ^= this.OrderId.GetHashCode();
+
+            result ^= this.OrderValue.GetHashCode();
+
+            result ^= this.OrderedDate.GetHashCode();
+
+            result ^= this.ShippedDate.GetHashCode();
+
+            return result;
+        }
+    }
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+

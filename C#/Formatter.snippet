@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Formatter</Title>
+      <Shortcut>Formatter</Shortcut>
+      <Description>Code snippet for Formatter</Description>
+      <Author>Kiran Challa</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>formattername</ID>
+          <ToolTip>Formatter name</ToolTip>
+          <Default>MTFormatterA</Default>
+        </Literal>
+        <Literal>
+          <ID>mediatype</ID>
+          <ToolTip>Media Type</ToolTip>
+          <Default>xyz</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp">
+        <![CDATA[public class $formattername$Formatter : BufferedMediaTypeFormatter
+    {
+        public $formattername$Formatter()
+        {
+            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/$mediatype$"));
+        }
+
+        public override bool CanReadType(Type type)
+        {
+            return true;
+        }
+
+        public override bool CanWriteType(Type type)
+        {
+            return true;
+        }
+
+        public override MediaTypeFormatter GetPerRequestFormatterInstance(Type type, HttpRequestMessage request, MediaTypeHeaderValue mediaType)
+        {
+            return base.GetPerRequestFormatterInstance(type, request, mediaType);
+        }
+
+        public override void SetDefaultContentHeaders(Type type, HttpContentHeaders headers, MediaTypeHeaderValue mediaType)
+        {
+            base.SetDefaultContentHeaders(type, headers, mediaType);
+        }
+        
+        public override object ReadFromStream(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+        {
+            string content = null;
+
+            using (var reader = new StreamReader(stream))
+            {
+                content = reader.ReadToEnd();
+            }
+
+            return content;
+        }
+
+        public override void WriteToStream(Type type, object value, Stream stream, HttpContent httpContent)
+        {
+            var output = value.ToString();
+            var writer = new StreamWriter(stream);
+            writer.Write(output);
+            writer.Flush();
+        }
+    }]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>CustomizedDefaultFormatters</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.Http;
+using System.Diagnostics;
+
+public class CustomizedDefaultXmlMediaTypeFormatter : XmlMediaTypeFormatter
+{
+    public CustomizedDefaultXmlMediaTypeFormatter()
+    {
+
+    }
+
+    public override bool CanReadType(Type type)
+    {
+        return base.CanReadType(type);
+    }
+
+    public override bool CanWriteType(Type type)
+    {
+        return base.CanWriteType(type);
+    }
+
+    public override MediaTypeFormatter GetPerRequestFormatterInstance(Type type, HttpRequestMessage request, MediaTypeHeaderValue mediaType)
+    {
+        return base.GetPerRequestFormatterInstance(type, request, mediaType);
+    }
+
+    public override Task<object> ReadFromStreamAsync(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+    {
+        return base.ReadFromStreamAsync(type, stream, httpContent, formatterLogger).ContinueWith((tsk) =>
+            {
+                if (tsk.IsFaulted || tsk.IsCanceled)
+                {
+                    string exceptionMessage = tsk.Exception.InnerException.ToString();
+
+                    //Console.WriteLine("Exception:\n{0}", exceptionMessage);
+                    //EventLog.WriteEntry("Application", exceptionMessage);
+                }
+
+                return tsk.Result;
+            });
+    }
+
+    public override void SetDefaultContentHeaders(Type type, HttpContentHeaders headers, MediaTypeHeaderValue mediaType)
+    {
+        base.SetDefaultContentHeaders(type, headers, mediaType);
+    }
+
+    public override Task WriteToStreamAsync(Type type, object value, Stream stream, HttpContent httpContent, TransportContext transportContext)
+    {
+        return base.WriteToStreamAsync(type, value, stream, httpContent, transportContext).ContinueWith((tsk) =>
+            {
+                if (tsk.IsFaulted || tsk.IsCanceled)
+                {
+                    string exceptionMessage = tsk.Exception.InnerException.ToString();
+
+                    //Console.WriteLine("Exception:\n{0}", exceptionMessage);
+                    //EventLog.WriteEntry("Application", exceptionMessage);
+                }
+            });
+    }
+}
+
+public class CustomizedDefaultJsonMediaTypeFormatter : JsonMediaTypeFormatter
+{
+    public CustomizedDefaultJsonMediaTypeFormatter()
+    {
+
+    }
+
+    public override bool CanReadType(Type type)
+    {
+        return base.CanReadType(type);
+    }
+
+    public override bool CanWriteType(Type type)
+    {
+        return base.CanWriteType(type);
+    }
+
+    public override MediaTypeFormatter GetPerRequestFormatterInstance(Type type, HttpRequestMessage request, MediaTypeHeaderValue mediaType)
+    {
+        return base.GetPerRequestFormatterInstance(type, request, mediaType);
+    }
+
+    public override Task<object> ReadFromStreamAsync(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+    {
+        return base.ReadFromStreamAsync(type, stream, httpContent, formatterLogger).ContinueWith((tsk) =>
+        {
+            if (tsk.IsFaulted || tsk.IsCanceled)
+            {
+                string exceptionMessage = tsk.Exception.InnerException.ToString();
+
+                //Console.WriteLine("Exception:\n{0}", exceptionMessage);
+                //EventLog.WriteEntry("Application", exceptionMessage);
+            }
+
+            return tsk.Result;
+        });
+    }
+
+    public override void SetDefaultContentHeaders(Type type, HttpContentHeaders headers, MediaTypeHeaderValue mediaType)
+    {
+        base.SetDefaultContentHeaders(type, headers, mediaType);
+    }
+
+    public override Task WriteToStreamAsync(Type type, object value, Stream stream, HttpContent httpContent, TransportContext transportContext)
+    {
+        return base.WriteToStreamAsync(type, value, stream, httpContent, transportContext).ContinueWith((tsk) =>
+        {
+            if (tsk.IsFaulted || tsk.IsCanceled)
+            {
+                string exceptionMessage = tsk.Exception.InnerException.ToString();
+
+                //Console.WriteLine("Exception:\n{0}", exceptionMessage);
+                //EventLog.WriteEntry("Application", exceptionMessage);
+            }
+        });
+    }
+}
+
+public class CustomizedDefaultFormUrlEncodedMediaTypeFormatter : FormUrlEncodedMediaTypeFormatter
+{
+    public CustomizedDefaultFormUrlEncodedMediaTypeFormatter()
+    {
+
+    }
+
+    public override bool CanReadType(Type type)
+    {
+        return base.CanReadType(type);
+    }
+
+    public override Task<object> ReadFromStreamAsync(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
+    {
+        return base.ReadFromStreamAsync(type, stream, httpContent, formatterLogger).ContinueWith((tsk) =>
+        {
+            if (tsk.IsFaulted || tsk.IsCanceled)
+            {
+                string exceptionMessage = tsk.Exception.InnerException.ToString();
+
+                //Console.WriteLine("Exception:\n{0}", exceptionMessage);
+                //EventLog.WriteEntry("Application", exceptionMessage);
+            }
+
+            return tsk.Result;
+        });
+    }
+}
+
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
