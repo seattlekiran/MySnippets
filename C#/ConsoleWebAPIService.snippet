@@ -31,7 +31,7 @@ namespace ConsoleApplication1
         static void Main(string[] args)
         {
             HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
-            config.Routes.MapHttpRoute("Default", "{controller}/{action}", new { controller = "SampleTests" });
+            config.Routes.MapHttpRoute("Default", "api/{controller}/{id}", new { id = RouteParameter.Optional });
 
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
 
