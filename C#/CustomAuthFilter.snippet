@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>CustomAuthFilter</Title>
+    </Header>
+    <Snippet>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        public class MyAuthFilterAttribute : FilterAttribute, IAuthorizationFilter, IFilter
+    {
+        public Task<HttpResponseMessage> ExecuteAuthorizationFilterAsync(HttpActionContext actionContext, CancellationToken cancellationToken, Func<Task<HttpResponseMessage>> continuation)
+        {
+            try
+            {
+                // Do you regular authorization here by retreiving Request from 
+                // actionContext.Request
+            }
+            catch (Exception e)
+            {
+                TaskCompletionSource<HttpResponseMessage> tcs = new TaskCompletionSource<HttpResponseMessage>();
+                tcs.SetException(e);
+                return tcs.Task;
+            }
+
+            if (actionContext.Response != null)
+            {
+                TaskCompletionSource<HttpResponseMessage> tcs = new TaskCompletionSource<HttpResponseMessage>();
+                tcs.SetResult(actionContext.Response);
+                return tcs.Task;
+            }
+            else
+            {
+                return continuation().ContinueWith<HttpResponseMessage>((tsk) =>
+                    {
+                        HttpResponseMessage response = tsk.Result;
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            //do somethig to response here
+                        }
+
+                        return response;
+
+                    }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            }
+        }
+    }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

@@ -13,6 +13,7 @@
       </Declarations>
       <Code Language="CSharp">
         <![CDATA[using System;
+        using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -33,9 +34,7 @@ namespace ConsoleApplication1
             HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
             config.Routes.MapHttpRoute("Default", "api/{controller}/{id}", new { id = RouteParameter.Optional });
 
-            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
-
-            Utility.UpdateConfig(config);
+            //Utility.UpdateConfig(config);
 
             HttpSelfHostServer server = new HttpSelfHostServer(config);
             server.OpenAsync().Wait();
@@ -47,24 +46,59 @@ namespace ConsoleApplication1
         }
     }
 
-    public class SampleTestsController : ApiController
+    public class OrderController : ApiController
     {
-        public string PostString([FromBody]string input)
+        public IEnumerable<Order> Get()
         {
-            return input;
+            return null;
         }
 
-        public string GetString()
+        public Order Get(string id)
         {
-            return "Hello";
+            return null;
         }
-
-        public Order UpdateOrder(Order order)
+        
+        public void Post(Order order)
+        {
+            
+        }
+        
+        public Order Put(string id, Order order)
         {
             return order;
         }
     }
 
+    public class ValuesController : ApiController
+    {
+        // GET api/values
+        public IEnumerable<string> Get()
+        {
+            return new string[] { "value1", "value2" };
+        }
+
+        // GET api/values/5
+        public string Get(int id)
+        {
+            return "value";
+        }
+
+        // POST api/values
+        public void Post([FromBody]string value)
+        {
+        }
+
+        // PUT api/values/5
+        public void Put(int id, [FromBody]string value)
+        {
+        }
+
+        // DELETE api/values/5
+        public void Delete(int id)
+        {
+        }
+    }
+    
     public class Order : IEquatable<Order>
     {
         public string OrderId { get; set; }
