@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>HttpParameterBinding</Title>
+    </Header>
+    <Snippet>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        public class FromUriOrBodyParameterBinding : System.Web.Http.Controllers.HttpParameterBinding
+    {
+        System.Web.Http.Controllers.HttpParameterBinding _defaultUriBinding;
+        System.Web.Http.Controllers.HttpParameterBinding _defaultFormatterBinding;
+
+        public FromUriOrBodyParameterBinding(System.Web.Http.Controllers.HttpParameterDescriptor desc)
+            : base(desc)
+        {
+            _defaultUriBinding = new FromUriAttribute().GetBinding(desc);
+            _defaultFormatterBinding = new FromBodyAttribute().GetBinding(desc);
+        }
+
+        public override Task ExecuteBindingAsync(System.Web.Http.Metadata.ModelMetadataProvider metadataProvider, System.Web.Http.Controllers.HttpActionContext actionContext, CancellationToken cancellationToken)
+        {
+            if (actionContext.Request.Content != null)
+            {
+                // we have something from the body, try that first
+                return _defaultFormatterBinding.ExecuteBindingAsync(metadataProvider, actionContext, cancellationToken);
+            }
+            else
+            {
+                // we need to read things from uri
+                return _defaultUriBinding.ExecuteBindingAsync(metadataProvider, actionContext, cancellationToken);
+            }
+        }
+
+        public static HttpParameterBinding GetCustomParameterBinding(HttpParameterDescriptor descriptor)
+        {
+            if (descriptor.ParameterType == typeof())
+            {
+                return new FromUriOrBodyParameterBinding(descriptor);
+            }
+
+            // any other types, let the default parameter binding handle
+            return null;
+        }
+    }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
