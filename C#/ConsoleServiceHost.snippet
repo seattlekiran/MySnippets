@@ -38,11 +38,9 @@ namespace Service
             string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
 
             HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
-            config.Routes.MapHttpRoute("Default", "{controller}/{action}/{id}", new { controller = "Sample", id = RouteParameter.Optional });
+            config.Routes.MapHttpRoute("Default", "api/{controller}/{id}", new { controller = "Sample", id = RouteParameter.Optional });
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
             
-            UpdateFormatters(config.Formatters);
-
             try
             {
                 server = new HttpSelfHostServer(config);
@@ -63,176 +61,18 @@ namespace Service
                 }
             }
         }
-
-        private static ICollection<MediaTypeFormatter> UpdateFormatters(Collection<MediaTypeFormatter> formatters)
-        {
-            formatters.Clear();
-
-            JsonMediaTypeFormatter jsonNetFormatter = new JsonMediaTypeFormatter();
-            jsonNetFormatter.UseDataContractJsonSerializer = false;
-            jsonNetFormatter.SupportedMediaTypes.Clear();
-            jsonNetFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/json-jsonnet"));
-            jsonNetFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/json-jsonnet"));
-
-            JsonMediaTypeFormatter dcjsFormatter = new JsonMediaTypeFormatter();
-            dcjsFormatter.UseDataContractJsonSerializer = true;
-            dcjsFormatter.SupportedMediaTypes.Clear();
-            dcjsFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/json-dcjs"));
-            dcjsFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/json-dcjs"));
-
-            XmlMediaTypeFormatter xmlFormatter = new XmlMediaTypeFormatter();
-            xmlFormatter.UseXmlSerializer = true;
-            xmlFormatter.SupportedMediaTypes.Clear();
-            xmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/xml-xml"));
-            xmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/xml-xml"));
-
-            XmlMediaTypeFormatter dcsXmlFormatter = new XmlMediaTypeFormatter();
-            dcsXmlFormatter.UseXmlSerializer = false;
-            dcsXmlFormatter.SupportedMediaTypes.Clear();
-            dcsXmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/xml-dcs"));
-            dcsXmlFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/xml-dcs"));
-
-            AsyncPlainTextFormatter asyncPlainTextFormatter = new AsyncPlainTextFormatter();
-
-            SyncPlainTextFormatter syncPlainTextFormatter = new SyncPlainTextFormatter();
-
-            formatters.Add(jsonNetFormatter);
-            formatters.Add(dcjsFormatter);
-            formatters.Add(xmlFormatter);
-            formatters.Add(dcsXmlFormatter);
-            formatters.Add(asyncPlainTextFormatter);
-            formatters.Add(syncPlainTextFormatter);
-
-            return formatters;
-        }
     }
 
     public class SampleController : ApiController
     {
-        public string GetString()
+        public string Get()
         {
             return "Hello";
         }
 
-        public string PostString([FromBody] string input)
+        public string Post([FromBody] string input)
         {
             return input;
-        }
-    }
-
-    public class SyncPlainTextFormatter : BufferedMediaTypeFormatter
-    {
-        public SyncPlainTextFormatter()
-        {
-            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/plain-sync"));
-            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/plain-sync"));
-        }
-
-        public override bool CanReadType(Type type)
-        {
-            return (type == typeof(string));
-        }
-
-        public override bool CanWriteType(Type type)
-        {
-            return (type == typeof(string));
-        }
-
-        public override object ReadFromStream(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
-        {
-            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
-            {
-                return string.Empty;
-            }
-
-            string content = null;
-
-            using (var reader = new StreamReader(stream))
-            {
-                content = reader.ReadToEnd();
-            }
-
-            return content;
-        }
-
-        public override void WriteToStream(Type type, object value, Stream stream, HttpContent httpContent)
-        {
-            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
-            {
-                return;
-            }
-
-            if (value != null)
-            {
-                using (var writer = new StreamWriter(stream))
-                {
-                    writer.Write(value.ToString());
-                    writer.Flush();
-                }
-            }
-        }
-    }
-
-    public class AsyncPlainTextFormatter : MediaTypeFormatter
-    {
-        public AsyncPlainTextFormatter()
-        {
-            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/plain-async"));
-            this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/plain-async"));
-        }
-
-        public override bool CanReadType(Type type)
-        {
-            return (type == typeof(string));
-        }
-
-        public override bool CanWriteType(Type type)
-        {
-            return (type == typeof(string));
-        }
-
-        public override Task<object> ReadFromStreamAsync(Type type, Stream stream, HttpContent httpContent, IFormatterLogger formatterLogger)
-        {
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
-
-            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
-            {
-                tcs.SetResult(string.Empty);
-                return tcs.Task;
-            }
-
-            string content = null;
-
-            using (var reader = new StreamReader(stream))
-            {
-                content = reader.ReadToEnd();
-            }
-
-            tcs.SetResult(content);
-            return tcs.Task;
-        }
-
-        public override Task WriteToStreamAsync(Type type, object value, Stream stream, HttpContent httpContent, System.Net.TransportContext transportContext)
-        {
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
-
-            if (httpContent.Headers.ContentLength.HasValue && httpContent.Headers.ContentLength.Value == 0)
-            {
-                tcs.SetResult(null);
-                return tcs.Task;
-            }
-
-            if (value != null)
-            {
-                using (var writer = new StreamWriter(stream))
-                {
-                    writer.Write(value.ToString());
-                    writer.Flush();
-                }
-            }
-
-            tcs.SetResult(null);
-            return tcs.Task;
         }
     }
 }]]>

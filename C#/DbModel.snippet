@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>DbModel</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity;
+
+namespace MvcApplication38.Models
+{
+    /*
+     Courses[*] to [*]Students
+     Professor[1] to [*]Courses
+     */
+    public class Course
+    {
+        public Course()
+        {
+            this.Students = new List<Student>();
+        }
+
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        public Professor Professor { get; set; }
+
+        public List<Student> Students { get; set; }
+    }
+
+    public class Professor
+    {
+        public Professor()
+        {
+            this.Courses = new List<Course>();
+        }
+
+        public int Id { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        public List<Course> Courses { get; set; }
+    }
+
+    public class Student
+    {
+        public Student()
+        {
+            this.Courses = new List<Course>();
+        }
+
+        public int Id { get; set; }
+
+        [Required]
+        public string FirstName { get; set; }
+
+        public string MiddleName { get; set; }
+
+        [Required]
+        public string LastName { get; set; }
+
+        [NotMapped]
+        public string FullName 
+        {
+            get
+            {
+                return this.FirstName + " " + this.LastName;
+            }
+        }
+
+        public List<Course> Courses { get; set; }
+    }
+
+    public class SchoolContext : DbContext
+    {
+        public SchoolContext()
+            : base("name=SchoolContext")
+        {
+        }
+
+        public DbSet<Course> Courses { get; set; }
+
+        public DbSet<Student> Students { get; set; }
+
+        public DbSet<Professor> Professors { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+
+    public class SchoolContextInitializer : DropCreateDatabaseIfModelChanges<SchoolContext>
+    {
+        protected override void Seed(SchoolContext context)
+        {
+            base.Seed(context);
+        }
+    }
+}
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
