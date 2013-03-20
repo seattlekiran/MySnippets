@@ -1,0 +1,209 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>InheritanceModelExample</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
+using System.Runtime.Serialization;
+using System.Web.Http;
+using System.Web.Http.SelfHost;
+
+namespace Service
+{
+    class Service
+    {
+        private static HttpSelfHostServer server = null;
+        private static string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
+
+        static void Main(string[] args)
+        {
+            HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
+            config.Routes.MapHttpRoute("Default", "api/{controller}/{id}", new { id = RouteParameter.Optional });
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+            config.Formatters.JsonFormatter.SerializerSettings.TypeNameHandling = TypeNameHandling.Objects;
+
+            try
+            {
+                server = new HttpSelfHostServer(config);
+                server.OpenAsync().Wait();
+
+                Console.WriteLine("Service listenting at: {0} ...", baseAddress);
+
+                TestWithHttpClient("application/xml");
+
+                TestWithHttpClient("application/json");
+
+                Console.ReadLine();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception Details:\n{0}", ex.ToString());
+            }
+            finally
+            {
+                if (server != null)
+                {
+                    server.CloseAsync().Wait();
+                }
+            }
+        }
+
+        private static void TestWithHttpClient(string mediaType)
+        {
+            HttpClient client = new HttpClient();
+
+            MediaTypeFormatter formatter = null;
+
+            // NOTE: following any settings on the following formatters should match
+            // to the settings that the service's formatters have.
+            if (mediaType == "application/xml")
+            {
+                formatter = new XmlMediaTypeFormatter();
+            }
+            else if (mediaType == "application/json")
+            {
+                JsonMediaTypeFormatter jsonFormatter = new JsonMediaTypeFormatter();
+                jsonFormatter.SerializerSettings.TypeNameHandling = TypeNameHandling.Objects;
+
+                formatter = jsonFormatter;
+            }
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = new Uri(baseAddress + "api/students");
+            request.Method = HttpMethod.Get;
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
+            HttpResponseMessage response = client.SendAsync(request).Result;
+            Student std = response.Content.ReadAsAsync<Student>().Result;
+
+            Console.WriteLine("GET data in '{0}' format", mediaType);
+            if (StudentsController.CONSTANT_STUDENT.Equals(std))
+            {
+                Console.WriteLine("both are equal");
+            }
+
+            client = new HttpClient();
+            request = new HttpRequestMessage();
+            request.RequestUri = new Uri(baseAddress + "api/students");
+            request.Method = HttpMethod.Post;
+            request.Content = new ObjectContent<Person>(StudentsController.CONSTANT_STUDENT, formatter);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
+            Student std1 = client.SendAsync(request).Result.Content.ReadAsAsync<Student>().Result;
+
+            Console.WriteLine("POST and receive data in '{0}' format", mediaType);
+            if (StudentsController.CONSTANT_STUDENT.Equals(std1))
+            {
+                Console.WriteLine("both are equal");
+            }
+        }
+    }
+
+    public class StudentsController : ApiController
+    {
+        public static readonly Student CONSTANT_STUDENT = new Student() { Id = 1, Name = "John", EnrolledCourses = new List<string>() { "maths", "physics" } };
+
+        public Person Get()
+        {
+            return CONSTANT_STUDENT;
+        }
+
+        // NOTE: specifying FromBody here is not required. By default complextypes are bound
+        // by formatters which read the body
+        public Person Post([FromBody] Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.BadRequest, this.ModelState));
+            }
+
+            return person;
+        }
+    }
+
+    [DataContract]
+    [KnownType(typeof(Student))]
+    public abstract class Person : IEquatable<Person>
+    {
+        [DataMember]
+        public int Id { get; set; }
+
+        [DataMember]
+        public string Name { get; set; }
+
+        // this is ignored
+        public DateTime DateOfBirth { get; set; }
+
+        public bool Equals(Person other)
+        {
+            if (other == null)
+                return false;
+
+            if (ReferenceEquals(this, other))
+                return true;
+
+            if (this.Id != other.Id)
+                return false;
+
+            if (this.Name != other.Name)
+                return false;
+
+            return true;
+        }
+    }
+
+    [DataContract]
+    public class Student : Person, IEquatable<Student>
+    {
+        [DataMember]
+        public List<string> EnrolledCourses { get; set; }
+
+        public bool Equals(Student other)
+        {
+            if (!base.Equals(other))
+            {
+                return false;
+            }
+
+            if (this.EnrolledCourses == null && other.EnrolledCourses == null)
+            {
+                return true;
+            }
+
+            if ((this.EnrolledCourses == null && other.EnrolledCourses != null) ||
+                (this.EnrolledCourses != null && other.EnrolledCourses == null))
+                return false;
+
+            if (this.EnrolledCourses.Count != other.EnrolledCourses.Count)
+                return false;
+
+            for (int i = 0; i < this.EnrolledCourses.Count; i++)
+            {
+                if (this.EnrolledCourses[i] != other.EnrolledCourses[i])
+                    return false;
+            }
+
+            return true;
+        }
+    }
+}
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+
