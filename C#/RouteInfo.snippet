@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>PrintRoutesInfo</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        private static string GetRoutesInfo(HttpRouteCollection routes)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (HttpRoute route in routes)
+            {
+                sb.AppendLine("-----------------------------------");
+                sb.AppendFormat("RouteTemplate: {0}", route.RouteTemplate);
+                sb.AppendLine();
+                sb.AppendLine("-----------------------------------");
+                sb.AppendLine("Defaults:");
+                sb.AppendLine("--------");
+                foreach (string key in route.Defaults.Keys)
+                {
+                    sb.AppendFormat("Key:{0}, Value:{1}", key, route.Defaults[key].ToString());
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine("Constraints:");
+                sb.AppendLine("-----------");
+                foreach (string key in route.Constraints.Keys)
+                {
+                    sb.AppendFormat("Key:{0}, Value:{1}", key, route.Constraints[key].ToString());
+                    sb.AppendLine();
+                }
+
+                Console.WriteLine();
+            }
+            
+            return sb.ToString();
+        }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
