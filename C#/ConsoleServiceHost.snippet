@@ -38,7 +38,7 @@ namespace Service
             string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
 
             HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
-            config.Routes.MapHttpRoute("Default", "api/{controller}/{id}", new { controller = "Sample", id = RouteParameter.Optional });
+            config.Routes.MapHttpRoute("Default", "api/{controller}/{id}", new { id = RouteParameter.Optional });
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
             
             try
