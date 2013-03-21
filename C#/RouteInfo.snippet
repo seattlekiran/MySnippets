@@ -15,33 +15,65 @@
         <![CDATA[ 
         private static string GetRoutesInfo(HttpRouteCollection routes)
         {
-            StringBuilder sb = new StringBuilder();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
             foreach (HttpRoute route in routes)
             {
-                sb.AppendLine("-----------------------------------");
+                sb.AppendLine();
+                sb.AppendLine("***********************************");
                 sb.AppendFormat("RouteTemplate: {0}", route.RouteTemplate);
                 sb.AppendLine();
                 sb.AppendLine("-----------------------------------");
                 sb.AppendLine("Defaults:");
                 sb.AppendLine("--------");
-                foreach (string key in route.Defaults.Keys)
+                if (route.Defaults.Count > 0)
                 {
-                    sb.AppendFormat("Key:{0}, Value:{1}", key, route.Defaults[key].ToString());
-                    sb.AppendLine();
+                    foreach (string key in route.Defaults.Keys)
+                    {
+                        sb.AppendFormat("Key:{0}, Value:{1}", key, route.Defaults[key].ToString());
+                        sb.AppendLine();
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("No default values");
                 }
 
+                sb.AppendLine();
                 sb.AppendLine("Constraints:");
                 sb.AppendLine("-----------");
-                foreach (string key in route.Constraints.Keys)
+                if (route.Constraints.Count > 0)
                 {
-                    sb.AppendFormat("Key:{0}, Value:{1}", key, route.Constraints[key].ToString());
-                    sb.AppendLine();
+                    foreach (string key in route.Constraints.Keys)
+                    {
+                        sb.AppendFormat("Key:{0}, Value:{1}", key, route.Constraints[key].ToString());
+                        sb.AppendLine();
+                    }
                 }
+                else
+                {
+                    sb.AppendLine("No constraints");
+                }
+
+                //sb.AppendLine();
+                //sb.AppendLine("Data Tokens:");
+                //sb.AppendLine("-----------");
+                //if (route.DataTokens.Count > 0)
+                //{
+                //    foreach (string key in route.DataTokens.Keys)
+                //    {
+                //        sb.AppendFormat("Key:{0}, Value:{1}", key, route.DataTokens[key].ToString());
+                //        sb.AppendLine();
+                //    }
+                //}
+                //else
+                //{
+                //    sb.AppendLine("No data tokens.");
+                //}
 
                 Console.WriteLine();
             }
-            
+
             return sb.ToString();
         }
         ]]>
