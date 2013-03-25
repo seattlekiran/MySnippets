@@ -2,7 +2,7 @@
 <CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
   <CodeSnippet Format="1.0.0">
     <Header>
-      <Title>PrintRoutesInfo</Title>
+      <Title>RouteInfoController</Title>
     </Header>
     <Snippet>
       <Declarations>
@@ -13,6 +13,16 @@
       </Declarations>
       <Code Language="CSharp">
         <![CDATA[ 
+        public class RouteInfoController : ApiController
+    {
+        [HttpGet("api/routeinfo")]
+        public HttpResponseMessage Get()
+        {
+            string str = GetRoutesInfo(Request.GetConfiguration().Routes);
+
+            return new HttpResponseMessage() { Content = new StringContent(str) };
+        }
+        
         private static string GetRoutesInfo(HttpRouteCollection routes)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -59,7 +69,7 @@
                 //sb.AppendLine();
                 //sb.AppendLine("Data Tokens:");
                 //sb.AppendLine("-----------");
-                //if (route.DataTokens.Count > 0)
+                //if (route.DataTokens != null && route.DataTokens.Count > 0)
                 //{
                 //    foreach (string key in route.DataTokens.Keys)
                 //    {
@@ -77,6 +87,7 @@
 
             return sb.ToString();
         }
+    }
         ]]>
       </Code>
     </Snippet>
