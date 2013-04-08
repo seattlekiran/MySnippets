@@ -13,7 +13,17 @@
       </Declarations>
       <Code Language="CSharp">
         <![CDATA[ 
-        public class RouteInfoController : ApiController
+        using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Web;
+using System.Web.Http;
+using System.Web.Http.Routing;
+
+namespace WebHostSampleApp.Controllers
+{
+    public class RouteInfoController : ApiController
     {
         [HttpGet("api/routeinfo")]
         public HttpResponseMessage Get()
@@ -22,7 +32,7 @@
 
             return new HttpResponseMessage() { Content = new StringContent(str) };
         }
-        
+
         private static string GetRoutesInfo(HttpRouteCollection routes)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -57,7 +67,20 @@
                 {
                     foreach (string key in route.Constraints.Keys)
                     {
-                        sb.AppendFormat("Key:{0}, Value:{1}", key, route.Constraints[key].ToString());
+                        IHttpRouteConstraint routeConstraint = route.Constraints[key] as IHttpRouteConstraint;
+
+                        string info = null;
+                        HttpMethodConstraint methodCosntraint = routeConstraint as HttpMethodConstraint;
+                        if (methodCosntraint != null)
+                        {
+                            info = string.Join(", ", methodCosntraint.AllowedMethods.Select(httpMethod => httpMethod.Method));
+                        }
+                        else
+                        {
+                            info = routeConstraint.ToString();
+                        }
+
+                        sb.AppendFormat("Key:{0}, Value:{1}", key, info);
                         sb.AppendLine();
                     }
                 }
@@ -66,28 +89,28 @@
                     sb.AppendLine("No constraints");
                 }
 
-                //sb.AppendLine();
-                //sb.AppendLine("Data Tokens:");
-                //sb.AppendLine("-----------");
-                //if (route.DataTokens != null && route.DataTokens.Count > 0)
-                //{
-                //    foreach (string key in route.DataTokens.Keys)
-                //    {
-                //        sb.AppendFormat("Key:{0}, Value:{1}", key, route.DataTokens[key].ToString());
-                //        sb.AppendLine();
-                //    }
-                //}
-                //else
-                //{
-                //    sb.AppendLine("No data tokens.");
-                //}
-
                 Console.WriteLine();
             }
 
             return sb.ToString();
         }
     }
+
+    public class ShortCircuitingAuthorizationFilter : AuthorizeAttribute
+    {
+        public override void OnAuthorization(System.Web.Http.Controllers.HttpActionContext actionContext)
+        {
+            actionContext.Response = new HttpResponseMessage()
+            {
+                Content = new StringContent(string.Format("Controller: {0}{1}Action: {2}",
+                                    actionContext.ControllerContext.ControllerDescriptor.ControllerName,
+                                    Environment.NewLine,
+                                    actionContext.ActionDescriptor.ActionName
+        ))
+            };
+        }
+    }      
+}
         ]]>
       </Code>
     </Snippet>
