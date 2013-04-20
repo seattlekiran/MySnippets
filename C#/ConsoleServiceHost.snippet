@@ -29,8 +29,7 @@ namespace Service
     class Service
     {
         private static HttpSelfHostServer server = null;
-        private static AppSettingsReader appSettingsReader = null;
-
+        
         static void Main(string[] args)
         {
             appSettingsReader = new AppSettingsReader();
@@ -38,7 +37,7 @@ namespace Service
             string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
 
             HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
-            config.Routes.MapHttpRoute("Default", "api/{controller}/{id}", new { id = RouteParameter.Optional });
+            config.MapHttpAttributeRoutes();
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
             
             try
@@ -63,6 +62,7 @@ namespace Service
         }
     }
 
+	[RoutePrefix("api/Sample")]
     public class SampleController : ApiController
     {
         public string Get()

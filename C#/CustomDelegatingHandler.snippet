@@ -16,14 +16,11 @@
         <![CDATA[
         public class $handlername$ : DelegatingHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return base.SendAsync(request, cancellationToken).ContinueWith<HttpResponseMessage>((responseToCompleteTask) =>
-                {
-                    HttpResponseMessage response = responseToCompleteTask.Result;
+            HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
-                    return response;
-                });
+            return response;
         }
     }
         ]]>
