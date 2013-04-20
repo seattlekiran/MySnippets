@@ -109,64 +109,60 @@ namespace MvcWebApi.MainTests.Tests.$testname$Tests
     }
 
     public class InMemoryHttpContentSerializationHandler : DelegatingHandler
+{
+    public InMemoryHttpContentSerializationHandler()
     {
-        public InMemoryHttpContentSerializationHandler()
+    }
+
+    public InMemoryHttpContentSerializationHandler(HttpMessageHandler innerHandler)
+        : base(innerHandler)
+    {
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        request.Content = await ConvertToStreamContentAsync(request.Content);
+
+        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+
+        response.Content = await ConvertToStreamContentAsync(response.Content);
+
+        return response;
+    }
+
+    private async Task<StreamContent> ConvertToStreamContentAsync(HttpContent originalContent)
+    {
+        if (originalContent == null)
         {
+            return null;
         }
 
-        public InMemoryHttpContentSerializationHandler(HttpMessageHandler innerHandler)
-            : base(innerHandler)
+        StreamContent streamContent = originalContent as StreamContent;
+
+        if (streamContent != null)
         {
-        }
-
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            request.Content = ConvertToStreamContent(request.Content);
-
-            return base.SendAsync(request, cancellationToken).ContinueWith<HttpResponseMessage>((responseTask) =>
-            {
-                HttpResponseMessage response = responseTask.Result;
-
-                response.Content = ConvertToStreamContent(response.Content);
-
-                return response;
-
-            });
-        }
-
-        private StreamContent ConvertToStreamContent(HttpContent originalContent)
-        {
-            if (originalContent == null)
-            {
-                return null;
-            }
-
-            StreamContent streamContent = originalContent as StreamContent;
-
-            if (streamContent != null)
-            {
-                return streamContent;
-            }
-
-            MemoryStream ms = new MemoryStream();
-
-            originalContent.CopyToAsync(ms).Wait();
-
-            // Reset the stream position back to 0 as in the previous CopyToAsync() call,
-            // a formatter for example, could have made the position to be at the end
-            ms.Position = 0;
-
-            streamContent = new StreamContent(ms);
-
-            // copy headers from the original content
-            foreach (KeyValuePair<string, IEnumerable<string>> header in originalContent.Headers)
-            {
-                streamContent.Headers.TryAddWithoutValidation(header.Key, header.Value);
-            }
-
             return streamContent;
         }
+
+        MemoryStream ms = new MemoryStream();
+
+        await originalContent.CopyToAsync(ms);
+
+        // Reset the stream position back to 0 as in the previous CopyToAsync() call,
+        // a formatter for example, could have made the position to be at the end
+        ms.Position = 0;
+
+        streamContent = new StreamContent(ms);
+
+        // copy headers from the original content
+        foreach (KeyValuePair<string, IEnumerable<string>> header in originalContent.Headers)
+        {
+            streamContent.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+
+        return streamContent;
     }
+}
 }
         ]]>
       </Code>

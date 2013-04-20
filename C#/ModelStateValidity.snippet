@@ -12,8 +12,7 @@
         </Literal>
       </Declarations>
       <Code Language="CSharp">
-        <![CDATA[ 
-        if (!ModelState.IsValid)
+        <![CDATA[ if (!ModelState.IsValid)
             {
                 throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.BadRequest, this.ModelState));
             }

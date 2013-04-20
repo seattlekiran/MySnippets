@@ -12,8 +12,7 @@
         </Literal>
       </Declarations>
       <Code Language="CSharp">
-        <![CDATA[ 
-        using System.Collections.Generic;
+        <![CDATA[using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -30,22 +29,18 @@ public class InMemoryHttpContentSerializationHandler : DelegatingHandler
     {
     }
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        request.Content = ConvertToStreamContent(request.Content);
+        request.Content = await ConvertToStreamContentAsync(request.Content);
 
-        return base.SendAsync(request, cancellationToken).ContinueWith<HttpResponseMessage>((responseTask) =>
-        {
-            HttpResponseMessage response = responseTask.Result;
+        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
-            response.Content = ConvertToStreamContent(response.Content);
+        response.Content = await ConvertToStreamContentAsync(response.Content);
 
-            return response;
-
-        });
+        return response;
     }
 
-    private StreamContent ConvertToStreamContent(HttpContent originalContent)
+    private async Task<StreamContent> ConvertToStreamContentAsync(HttpContent originalContent)
     {
         if (originalContent == null)
         {
@@ -61,7 +56,7 @@ public class InMemoryHttpContentSerializationHandler : DelegatingHandler
 
         MemoryStream ms = new MemoryStream();
 
-        originalContent.CopyToAsync(ms).Wait();
+        await originalContent.CopyToAsync(ms);
 
         // Reset the stream position back to 0 as in the previous CopyToAsync() call,
         // a formatter for example, could have made the position to be at the end
@@ -78,7 +73,7 @@ public class InMemoryHttpContentSerializationHandler : DelegatingHandler
         return streamContent;
     }
 }
-        ]]>
+		]]>
       </Code>
     </Snippet>
   </CodeSnippet>

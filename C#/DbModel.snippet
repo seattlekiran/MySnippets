@@ -31,10 +31,8 @@ namespace MvcApplication38.Models
             this.Students = new List<Student>();
         }
 
-        [Key]
         public int Id { get; set; }
 
-        [Required]
         public string Name { get; set; }
 
         public Professor Professor { get; set; }
@@ -51,7 +49,6 @@ namespace MvcApplication38.Models
 
         public int Id { get; set; }
 
-        [Required]
         public string Name { get; set; }
 
         public List<Course> Courses { get; set; }
@@ -66,31 +63,20 @@ namespace MvcApplication38.Models
 
         public int Id { get; set; }
 
-        [Required]
         public string FirstName { get; set; }
 
         public string MiddleName { get; set; }
 
-        [Required]
         public string LastName { get; set; }
-
-        [NotMapped]
-        public string FullName 
-        {
-            get
-            {
-                return this.FirstName + " " + this.LastName;
-            }
-        }
 
         public List<Course> Courses { get; set; }
     }
 
     public class SchoolContext : DbContext
     {
-        public SchoolContext()
-            : base("name=DefaultConnection")
+        static SchoolContext()
         {
+			Database.SetInitializer<SchoolContext>(new SchoolContextInitializer());
         }
 
         public DbSet<Course> Courses { get; set; }
@@ -100,7 +86,7 @@ namespace MvcApplication38.Models
         public DbSet<Professor> Professors { get; set; }
     }
 
-    public class SchoolContextInitializer : DropCreateDatabaseIfModelChanges<SchoolContext>
+    public class SchoolContextInitializer : DropCreateDatabaseAlways<SchoolContext>
     {
         protected override void Seed(SchoolContext context)
         {
