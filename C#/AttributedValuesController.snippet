@@ -16,17 +16,19 @@
         [RoutePrefix("api/values")]
     public class ValuesController : ApiController
     {
-        public IEnumerable<string> Get()
+        [HttpGet("")]
+        public IEnumerable<string> GetAll()
         {
             return new string[] { "value1", "value2" };
         }
 
         [HttpGet("{id}")]
-        public string Get(int id)
+        public string GetSingle(int id)
         {
             return "value";
         }
 
+        [HttpPost("")]
         public void Post([FromBody]string value)
         {
         }
