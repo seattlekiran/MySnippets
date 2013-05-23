@@ -1,0 +1,126 @@
+﻿<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>KatanaStandaloneTest</Title>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>testname</ID>
+          <ToolTip>Tests Name</ToolTip>
+          <Default>Sample</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[using System;
+using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
+using System.Web.Http;
+using Microsoft.Owin.Hosting;
+using Owin;
+using Xunit;
+using Xunit.Extensions;
+    
+            namespace MvcWebApi.MainTests.Tests.$testname$Tests
+{
+    public class $testname$Tests : IDisposable
+    {
+        [Fact]
+        public void PostTest()
+        {
+            string expectedResponse = "<string xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">Hello</string>";
+
+            HttpClient httpClient = new HttpClient();
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.Content = new ObjectContent<string>("Hello", new JsonMediaTypeFormatter());
+            request.RequestUri = new Uri(this.BaseAddress + "api/$testname$Tests/PostString");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            request.Method = HttpMethod.Post;
+
+            using (HttpResponseMessage response = httpClient.SendAsync(request).Result)
+            {
+                Assert.NotNull(response.Content);
+                Assert.NotNull(response.Content.Headers.ContentType);
+                Assert.Equal<string>("application/xml; charset=utf-8", response.Content.Headers.ContentType.ToString());
+                Assert.Equal<string>(expectedResponse, response.Content.ReadAsStringAsync().Result);
+            }
+        }
+
+        [Fact]
+        public void GetTest()
+        {
+            string expectedResponse = "<string xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">Hello</string>";
+
+            HttpClient httpClient = new HttpClient();
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = new Uri(this.BaseAddress + "api/$testname$Tests/GetString");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            request.Method = HttpMethod.Get;
+
+            using (HttpResponseMessage response = httpClient.SendAsync(request).Result)
+            {
+                Assert.NotNull(response.Content);
+                Assert.NotNull(response.Content.Headers.ContentType);
+                Assert.Equal<string>("application/xml; charset=utf-8", response.Content.Headers.ContentType.ToString());
+                Assert.Equal<string>(expectedResponse, response.Content.ReadAsStringAsync().Result);
+            }                
+        }
+        
+        private IDisposable server = null;
+
+        public $testname$Tests()
+        {
+            server = WebApp.Start(BaseAddress, Configuration);
+        }
+
+        public void Configuration(IAppBuilder appBuilder)
+        {
+            var config = new HttpConfiguration();
+
+            config.MapHttpAttributeRoutes();
+
+            appBuilder.UseWebApi(config);
+        }
+
+        public void Dispose()
+        {
+            if (server != null)
+            {
+                server.Dispose();
+            }
+        }
+
+        protected virtual string BaseAddress
+        {
+            get { return string.Format("http://{0}:9090/", Environment.MachineName); }
+        }
+    }
+
+    [RoutePrefix("api/$testname$Tests")]
+    public class $testname$TestsController : ApiController
+    {
+        [HttpPost("PostString")]
+        public string PostString([FromBody]string input)
+        {
+            return input;
+        }
+
+        [HttpGet("GetString")]
+        public string GetString()
+        {
+            return "Hello";
+        }
+    }
+}
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

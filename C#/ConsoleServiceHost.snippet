@@ -32,8 +32,6 @@ namespace Service
         
         static void Main(string[] args)
         {
-            appSettingsReader = new AppSettingsReader();
-
             string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
 
             HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
