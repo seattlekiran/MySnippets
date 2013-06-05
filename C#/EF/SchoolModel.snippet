@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>DbModel</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity;
+
+namespace Models
+{
+    Database.SetInitializer<SchoolContext>(new SchoolContextInitializer());
+
+    /*
+     Courses[*] to [*]Students
+     Professor[1] to [*]Courses
+     */
+    public class Course
+    {
+        public Course()
+        {
+            this.Students = new List<Student>();
+        }
+
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+
+        public Professor Professor { get; set; }
+
+        public List<Student> Students { get; set; }
+    }
+
+    public class Professor
+    {
+        public Professor()
+        {
+            this.Courses = new List<Course>();
+        }
+
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+
+        public List<Course> Courses { get; set; }
+    }
+
+    public class Student
+    {
+        public Student()
+        {
+            this.Courses = new List<Course>();
+        }
+
+        public int Id { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string MiddleName { get; set; }
+
+        public string LastName { get; set; }
+
+        public List<Course> Courses { get; set; }
+    }
+
+    public class SchoolContext : DbContext
+    {
+        public DbSet<Course> Courses { get; set; }
+
+        public DbSet<Student> Students { get; set; }
+
+        public DbSet<Professor> Professors { get; set; }
+    }
+
+    public class SchoolContextInitializer : DropCreateDatabaseAlways<SchoolContext>
+    {
+        protected override void Seed(SchoolContext context)
+        {
+            Student rob = new Student();
+            rob.FirstName = "Rob";
+            rob.LastName = "Hindman";
+
+            Student mike = new Student();
+            mike.FirstName = "Mike";
+            mike.LastName = "Stall";
+
+            Student dan = new Student();
+            dan.FirstName = "Dan";
+            dan.LastName = "Randall";
+
+            context.Students.Add(rob);
+            context.Students.Add(mike);
+            context.Students.Add(dan);
+            context.SaveChanges();
+
+            Course algorithms = new Course();
+            algorithms.Name = "Algorithms";
+            algorithms.Students.Add(rob);
+            algorithms.Students.Add(mike);
+
+            Course networking = new Course();
+            networking.Name = "Computer Networks";
+            networking.Students.Add(dan);
+            networking.Students.Add(rob);
+
+            Course cryptography = new Course();
+            cryptography.Name = "Cryptography";
+            cryptography.Students.Add(dan);
+            cryptography.Students.Add(rob);
+            cryptography.Students.Add(mike);
+
+            context.Courses.Add(algorithms);
+            context.Courses.Add(networking);
+            context.Courses.Add(cryptography);
+            context.SaveChanges();
+
+            Professor james = new Professor();
+            james.Name = "James King";
+            james.Courses.Add(networking);
+
+            Professor richard = new Professor();
+            richard.Name = "Richard Jenkins";
+            richard.Courses.Add(cryptography);
+
+            Professor steve = new Professor();
+            steve.Name = "Steve Cutler";
+            steve.Courses.Add(algorithms);
+
+            context.Professors.Add(james);
+            context.Professors.Add(richard);
+            context.Professors.Add(steve);
+            context.SaveChanges();
+        }
+    }
+}
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
