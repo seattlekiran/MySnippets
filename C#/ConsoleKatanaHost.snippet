@@ -29,7 +29,7 @@ namespace SampleOwinApp
     {
         static void Main(string[] args)
         {
-            string baseAddress = string.Format("http://{0}:12345/vroot", Environment.MachineName);
+            string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
 
             using (WebApp.Start<Program>(url: baseAddress))
             {
