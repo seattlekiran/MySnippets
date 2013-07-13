@@ -17,11 +17,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Web;
+using System.Text;
+using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Controllers;
 using System.Web.Http.Routing;
 
-namespace WebHostSampleApp.Controllers
+namespace SampleOwinApp
 {
     public class RouteInfoController : ApiController
     {
@@ -33,69 +35,95 @@ namespace WebHostSampleApp.Controllers
             return new HttpResponseMessage() { Content = new StringContent(str) };
         }
 
-        private static string GetRoutesInfo(HttpRouteCollection routes)
+        private static string GetRoutesInfo(HttpRouteCollection webApiRoutes)
         {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            StringBuilder routesInfoBuilder = new StringBuilder();
 
-            foreach (var route in routes)
+            routesInfoBuilder.AppendLine();
+            routesInfoBuilder.AppendLine();
+            routesInfoBuilder.AppendFormat("Web API Routes (Total: {0}):", webApiRoutes.Count);
+            routesInfoBuilder.AppendLine();
+            routesInfoBuilder.AppendLine("-----------------------------");
+
+            foreach (IHttpRoute route in webApiRoutes)
             {
-                sb.AppendLine();
-                sb.AppendLine("**********************************************************************");
-                sb.AppendFormat("RouteTemplate: '{0}'", route.RouteTemplate);
-                sb.AppendLine();
-                sb.AppendLine("-----------------------------------");
-                sb.AppendLine("Defaults:");
-                sb.AppendLine("--------");
-                if (route.Defaults.Count > 0)
-                {
-                    foreach (string key in route.Defaults.Keys)
-                    {
-                        sb.AppendFormat("Key: {0}, Value: {1}", key,
-                            (route.Defaults[key] == RouteParameter.Optional) ? "Optional" : route.Defaults[key].ToString());
-                        sb.AppendLine();
-                    }
-                }
-                else
-                {
-                    sb.AppendLine("No default values");
-                }
+                routesInfoBuilder.AppendFormat("config.Routes.MapHttpRoute(\"{0}\", \"{1}\", new {{ {2} }}, new {{ {3} }}, new {{ {4} }});",
+                    "routeName",
+                    route.RouteTemplate,
+                    GetRouteDefaults(route.Defaults),
+                    GetRouteConstraints(route.Constraints),
+                    GetDataTokens(route.DataTokens));
 
-                sb.AppendLine();
-                sb.AppendLine("Constraints:");
-                sb.AppendLine("-----------");
-                if (route.Constraints.Count > 0)
-                {
-                    foreach (string key in route.Constraints.Keys)
-                    {
-                        IHttpRouteConstraint routeConstraint = route.Constraints[key] as IHttpRouteConstraint;
-
-                        string info = null;
-                        HttpMethodConstraint methodCosntraint = routeConstraint as HttpMethodConstraint;
-                        if (methodCosntraint != null)
-                        {
-                            info = string.Join(", ", methodCosntraint.AllowedMethods.Select(httpMethod => httpMethod.Method));
-                        }
-                        else
-                        {
-                            info = routeConstraint.ToString();
-                        }
-
-                        sb.AppendFormat("Key:{0}, Value:{1}", key, info);
-                        sb.AppendLine();
-                    }
-                }
-                else
-                {
-                    sb.AppendLine("No constraints");
-                }
-
-                Console.WriteLine();
+                routesInfoBuilder.AppendLine();
             }
 
-            return sb.ToString();
+            return routesInfoBuilder.ToString();
+        }
+
+        private static string GetRouteConstraints(IDictionary<string, object> routeValueDictionary)
+        {
+            if (routeValueDictionary != null)
+            {
+                return string.Join(", ", routeValueDictionary.Keys.Select(key =>
+                {
+                    string cnst = string.Empty;
+                    if (routeValueDictionary[key] is HttpMethodConstraint)
+                    {
+                        HttpMethodConstraint methodConstraint = routeValueDictionary[key] as HttpMethodConstraint;
+
+                        cnst = string.Format("{0} = HttpMethodConstraints[{1}]", key, string.Join(", ", methodConstraint.AllowedMethods));
+                    }
+                    else
+                    {
+                        cnst = string.Format("{0} = {1}", key, routeValueDictionary[key].GetType().Name);
+                    }
+
+                    return cnst;
+                }));
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetRouteDefaults(IDictionary<string, object> routeValueDictionary)
+        {
+            if (routeValueDictionary != null && routeValueDictionary.Keys.Count > 0)
+            {
+                return string.Join(", ", routeValueDictionary.Keys.Select(key => string.Format("{0} = \"{1}\"", key,
+                                    ((routeValueDictionary[key] == RouteParameter.Optional) ? "RouteParameter.Optional" : routeValueDictionary[key].ToString()))));
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetDataTokens(IDictionary<string, object> routeValueDictionary)
+        {
+            if (routeValueDictionary != null && routeValueDictionary.Keys.Count > 0)
+            {
+                return string.Join(", ", routeValueDictionary.Keys.Select(key =>
+                {
+                    string dataToken = string.Empty;
+
+                    if (routeValueDictionary[key] != null && (routeValueDictionary[key].GetType() == typeof(ReflectedHttpActionDescriptor[])))
+                    {
+                        ReflectedHttpActionDescriptor[] descriptors = (ReflectedHttpActionDescriptor[])routeValueDictionary[key];
+
+                        dataToken = string.Format("{0} = ReflectedHttpActionDescriptor[{1}]", key, string.Join(", ", string.Join(",", descriptors.Select(refDesc => refDesc.ActionName))));
+                    }
+                    else
+                    {
+                        dataToken = string.Format("{0} = {1}", key, routeValueDictionary[key].GetType().Name);
+                    }
+
+                    return dataToken;
+                }));
+            }
+
+            return string.Empty;
         }
     }
 }
+
 
         ]]>
       </Code>
