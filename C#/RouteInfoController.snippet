@@ -13,10 +13,11 @@
       </Declarations>
       <Code Language="CSharp">
         <![CDATA[ 
-        using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -108,7 +109,7 @@ namespace SampleOwinApp
                     {
                         ReflectedHttpActionDescriptor[] descriptors = (ReflectedHttpActionDescriptor[])routeValueDictionary[key];
 
-                        dataToken = string.Format("{0} = ReflectedHttpActionDescriptor[{1}]", key, string.Join(", ", string.Join(",", descriptors.Select(refDesc => refDesc.ActionName))));
+                        dataToken = string.Format("{0} = [{1}]", key, string.Join(", ", string.Join(",", descriptors.Select(refDesc => GetMethoName(refDesc.MethodInfo)))));
                     }
                     else
                     {
@@ -120,6 +121,20 @@ namespace SampleOwinApp
             }
 
             return string.Empty;
+        }
+
+        private static string GetMethoName(MethodInfo mi)
+        {
+            string methodName = string.Empty;
+
+            string methodNameFormat = string.Format("{0}({{0}})", mi.Name);
+
+            if (mi.GetParameters().Length != 0)
+            {
+                methodName = string.Format(methodNameFormat, string.Join(", ", mi.GetParameters().Select(pi => pi.ParameterType.Name + " " + pi.Name)));
+            }
+
+            return methodName;
         }
     }
 }
