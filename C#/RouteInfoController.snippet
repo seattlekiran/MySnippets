@@ -109,7 +109,7 @@ namespace SampleOwinApp
                     {
                         ReflectedHttpActionDescriptor[] descriptors = (ReflectedHttpActionDescriptor[])routeValueDictionary[key];
 
-                        dataToken = string.Format("{0} = [{1}]", key, string.Join(", ", string.Join(",", descriptors.Select(refDesc => GetMethoName(refDesc.MethodInfo)))));
+                        dataToken = string.Format("{0} = [{1}]", key, string.Join(",", descriptors.Select(refDesc => GetMethoName(refDesc.MethodInfo))));
                     }
                     else
                     {
@@ -133,7 +133,11 @@ namespace SampleOwinApp
             {
                 methodName = string.Format(methodNameFormat, string.Join(", ", mi.GetParameters().Select(pi => pi.ParameterType.Name + " " + pi.Name)));
             }
-
+			else
+            {
+                methodName = string.Format(methodNameFormat, string.Empty);
+            }
+			
             return methodName;
         }
     }
