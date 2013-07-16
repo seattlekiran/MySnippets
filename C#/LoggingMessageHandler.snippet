@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>LoggingMessageHandler</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        public class LoggingMessageHandler : DelegatingHandler
+    {
+        private StringBuilder messageBuilder = null;
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            messageBuilder = new StringBuilder();
+
+            messageBuilder.AppendFormat("{0} {1}", request.Method.Method, request.RequestUri);
+            messageBuilder.AppendLine();
+
+            //get request headers information
+            GetHeaders(request.Headers);
+
+            //get request content's headers and body
+            if (request.Content != null)
+            {
+                GetHeaders(request.Content.Headers);
+
+                // NOTE 1: 
+                // ReadAsStringAsync call buffers the entire request in memory.
+                // So, even though you could be consuming the request's stream here, since the entire request is buffered
+                // in memory, you can expect the rest of the call stack to work as expected.
+                // NOTE 2:
+                // Look for performance considerations when the request size is too huge.
+                string body = await request.Content.ReadAsStringAsync();
+
+                messageBuilder.AppendLine();
+                messageBuilder.Append(body);
+            }
+
+            //TODO: log the message here
+            //logger.Log(messageBuilder.ToString())
+
+            // call the rest of the stack as usual
+            return await base.SendAsync(request, cancellationToken);
+        }
+
+        private void GetHeaders(HttpHeaders headers)
+        {
+            foreach (KeyValuePair<string, IEnumerable<string>> header in headers)
+            {
+                messageBuilder.AppendLine(string.Format("{0}: {1}", header.Key, string.Join(",", header.Value)));
+            }
+        }
+    }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+
