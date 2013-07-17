@@ -29,7 +29,7 @@ namespace SampleOwinApp
     {
         static void Main(string[] args)
         {
-            string baseAddress = string.Format("http://{0}:9095/", Environment.MachineName);
+            string baseAddress = string.Format("http://{0}:9095", Environment.MachineName);
 
             using (WebApp.Start<Program>(url: baseAddress))
             {
@@ -38,6 +38,9 @@ namespace SampleOwinApp
                 var response = client.GetAsync(baseAddress + "/api/values").Result;
 
                 Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+				
+                Console.WriteLine("Listenting at {0}...", baseAddress);
+                Console.ReadLine();
             }
         }
 
@@ -54,17 +57,19 @@ namespace SampleOwinApp
     [RoutePrefix("api/values")]
     public class ValuesController : ApiController
     {
-        public IEnumerable<string> Get()
+        [HttpGet("")]
+        public IEnumerable<string> GetAll()
         {
             return new string[] { "value1", "value2" };
         }
 
         [HttpGet("{id}")]
-        public string Get(int id)
+        public string GetSingle(int id)
         {
             return "value";
         }
 
+        [HttpPost("")]
         public void Post([FromBody]string value)
         {
         }
