@@ -13,6 +13,7 @@
       </Declarations>
       <Code Language="CSharp">
         <![CDATA[ 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace SampleOwinApp
 {
     public class RouteInfoController : ApiController
     {
-        [HttpGet("api/routeinfo")]
+        [HttpGet("api/routes")]
         public HttpResponseMessage Get()
         {
             string str = GetRoutesInfo(Request.GetConfiguration().Routes);
@@ -61,22 +62,22 @@ namespace SampleOwinApp
             return routesInfoBuilder.ToString();
         }
 
-        private static string GetRouteConstraints(IDictionary<string, object> routeValueDictionary)
+        private static string GetRouteConstraints(IDictionary<string, object> constraints)
         {
-            if (routeValueDictionary != null)
+            if (constraints != null)
             {
-                return string.Join(", ", routeValueDictionary.Keys.Select(key =>
+                return string.Join(", ", constraints.Keys.Select(key =>
                 {
                     string cnst = string.Empty;
-                    if (routeValueDictionary[key] is HttpMethodConstraint)
+                    if (constraints[key] is HttpMethodConstraint)
                     {
-                        HttpMethodConstraint methodConstraint = routeValueDictionary[key] as HttpMethodConstraint;
+                        HttpMethodConstraint methodConstraint = constraints[key] as HttpMethodConstraint;
 
                         cnst = string.Format("{0} = HttpMethodConstraints[{1}]", key, string.Join(", ", methodConstraint.AllowedMethods));
                     }
                     else
                     {
-                        cnst = string.Format("{0} = {1}", key, routeValueDictionary[key].GetType().Name);
+                        cnst = string.Format("{0} = {1}", key, constraints[key].GetType().Name);
                     }
 
                     return cnst;
@@ -86,34 +87,46 @@ namespace SampleOwinApp
             return string.Empty;
         }
 
-        private static string GetRouteDefaults(IDictionary<string, object> routeValueDictionary)
+        private static string GetRouteDefaults(IDictionary<string, object> defaults)
         {
-            if (routeValueDictionary != null && routeValueDictionary.Keys.Count > 0)
+            if (defaults != null && defaults.Keys.Count > 0)
             {
-                return string.Join(", ", routeValueDictionary.Keys.Select(key => string.Format("{0} = \"{1}\"", key,
-                                    ((routeValueDictionary[key] == RouteParameter.Optional) ? "RouteParameter.Optional" : routeValueDictionary[key].ToString()))));
+                return string.Join(", ", defaults.Keys.Select(key =>
+                    {
+                        string val = string.Empty;
+                        if (defaults[key] == RouteParameter.Optional)
+                        {
+                            val = string.Format("{0} = RouteParameter.Optional", key);
+                        }
+                        else
+                        {
+                            val = string.Format("{0} = \"{1}\"", key, defaults[key].ToString());
+                        }
+
+                        return val;
+                    }));
             }
 
             return string.Empty;
         }
 
-        private static string GetDataTokens(IDictionary<string, object> routeValueDictionary)
+        private static string GetDataTokens(IDictionary<string, object> dataTokens)
         {
-            if (routeValueDictionary != null && routeValueDictionary.Keys.Count > 0)
+            if (dataTokens != null && dataTokens.Keys.Count > 0)
             {
-                return string.Join(", ", routeValueDictionary.Keys.Select(key =>
+                return string.Join(", ", dataTokens.Keys.Select(key =>
                 {
                     string dataToken = string.Empty;
 
-                    if (routeValueDictionary[key] != null && (routeValueDictionary[key].GetType() == typeof(ReflectedHttpActionDescriptor[])))
+                    if (key == "actions")
                     {
-                        ReflectedHttpActionDescriptor[] descriptors = (ReflectedHttpActionDescriptor[])routeValueDictionary[key];
+                        ReflectedHttpActionDescriptor[] descriptors = (ReflectedHttpActionDescriptor[])dataTokens[key];
 
                         dataToken = string.Format("{0} = [{1}]", key, string.Join(",", descriptors.Select(refDesc => GetMethoName(refDesc.MethodInfo))));
                     }
                     else
                     {
-                        dataToken = string.Format("{0} = {1}", key, routeValueDictionary[key].GetType().Name);
+                        dataToken = string.Format("{0} = {1}", key, dataTokens[key].GetType().Name);
                     }
 
                     return dataToken;
@@ -133,17 +146,15 @@ namespace SampleOwinApp
             {
                 methodName = string.Format(methodNameFormat, string.Join(", ", mi.GetParameters().Select(pi => pi.ParameterType.Name + " " + pi.Name)));
             }
-			else
+            else
             {
                 methodName = string.Format(methodNameFormat, string.Empty);
             }
-			
+
             return methodName;
         }
     }
 }
-
-
         ]]>
       </Code>
     </Snippet>
