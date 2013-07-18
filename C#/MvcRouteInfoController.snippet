@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>MvcRouteInfoController</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Web.Http;
+using System.Web.Http.Description;
+using System.Web.Http.Routing;
+using System.Web.Mvc;
+using System.Web.Routing;
+
+namespace WebApplication7.Controllers
+{
+    public class RouteInfoController : ApiController
+    {
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [System.Web.Http.HttpGet("api/routes/mvc")]
+        public HttpResponseMessage GetAllRoutes()
+        {
+            string str = GetAllRoutes(RouteTable.Routes);
+
+            return new HttpResponseMessage() { Content = new StringContent(str) };
+        }
+
+        private static string GetAllRoutes(RouteCollection routes)
+        {
+            StringBuilder routesInfoBuilder = new StringBuilder();
+
+            routesInfoBuilder.AppendLine();
+            routesInfoBuilder.AppendLine();
+            routesInfoBuilder.AppendFormat("Mvc Routes (Total: {0}):", routes.Count);
+            routesInfoBuilder.AppendLine();
+            routesInfoBuilder.AppendLine("-------------------------");
+
+            foreach (Route route in routes)
+            {
+                if (!route.Url.StartsWith("{resource}.axd"))
+                {
+                    routesInfoBuilder.AppendFormat("config.Routes.MapRoute(\"{0}\", \"{1}\", new {{ {2} }}, new {{ {3} }}, new {{ {4} }});",
+                        "routeName",
+                        route.Url,
+                        GetRouteDefaults(route.Defaults),
+                        GetRouteConstraints(route.Constraints),
+                        GetDataTokens(route.DataTokens));
+
+                    routesInfoBuilder.AppendLine();
+                    routesInfoBuilder.AppendLine();
+                }
+            }
+
+            return routesInfoBuilder.ToString();
+        }
+
+        private static object GetDataTokens(RouteValueDictionary routeValueDictionary)
+        {
+            if (routeValueDictionary != null && routeValueDictionary.Keys.Count > 0)
+            {
+                return string.Join(", ", routeValueDictionary.Keys.Select(key => 
+                    {
+                        string val = string.Empty;
+                        if (routeValueDictionary[key].GetType() == typeof(string[]))
+                        {
+                            val = string.Join(",", (string[])routeValueDictionary[key]);
+                        }
+                        else
+                        {
+                            val = routeValueDictionary[key].ToString();
+                        }
+
+                        return string.Format("{0} = \"{1}\"", key, val);
+                    }));
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetRouteConstraints(RouteValueDictionary routeValueDictionary)
+        {
+            if (routeValueDictionary != null)
+            {
+                return string.Join(", ", routeValueDictionary.Keys.Select(key =>
+                {
+                    string cnst = string.Empty;
+                    if (routeValueDictionary[key] is System.Web.Routing.HttpMethodConstraint)
+                    {
+                        System.Web.Routing.HttpMethodConstraint methodConstraint = routeValueDictionary[key] as System.Web.Routing.HttpMethodConstraint;
+
+                        cnst = string.Format("{0} = HttpMethodConstraints[{1}]", key, string.Join(", ", methodConstraint.AllowedMethods));
+                    }
+                    else
+                    {
+                        cnst = string.Format("{0} = {1}", key, routeValueDictionary[key].GetType().Name);
+                    }
+
+                    return cnst;
+                }));
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetRouteDefaults(RouteValueDictionary routeValueDictionary)
+        {
+            if (routeValueDictionary != null && routeValueDictionary.Keys.Count > 0)
+            {
+                return string.Join(", ", routeValueDictionary.Keys.Select(key => string.Format("{0} = \"{1}\"", key,
+                                    ((routeValueDictionary[key] == UrlParameter.Optional) ? "UrlParameter.Optional" : routeValueDictionary[key].ToString()))));
+            }
+
+            return string.Empty;
+        }
+    }
+}
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
