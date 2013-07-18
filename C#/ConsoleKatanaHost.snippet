@@ -34,13 +34,11 @@ namespace SampleOwinApp
             using (WebApp.Start<Program>(url: baseAddress))
             {
                 HttpClient client = new HttpClient();
-
                 var response = client.GetAsync(baseAddress + "/api/values").Result;
-
                 Console.WriteLine(response.Content.ReadAsStringAsync().Result);
 				
-                Console.WriteLine("Listenting at {0}...", baseAddress);
-                Console.ReadLine();
+                //Console.WriteLine("Listenting at {0}...", baseAddress);
+                //Console.ReadLine();
             }
         }
 
