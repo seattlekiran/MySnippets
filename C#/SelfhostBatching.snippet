@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>SelfhostBatching</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Http.Hosting;
+using System.Web.Http.Owin;
+using Microsoft.Owin.Hosting;
+using Owin;
+using System.Web.Http.Batch;
+
+namespace SampleOwinApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string baseAddress = string.Format("http://{0}:9095", Environment.MachineName);
+
+            using (WebApp.Start<Program>(url: baseAddress))
+            {
+                //HttpClient client = new HttpClient();
+                //var response = client.GetAsync(baseAddress + "/api/values").Result;
+                //Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+
+                HttpClient client = new HttpClient();
+
+                var batchRequest = new HttpRequestMessage(HttpMethod.Post, string.Format("{0}/api/$batch", baseAddress));
+                var batchContent = new MultipartContent();
+                batchRequest.Content = batchContent;
+
+                batchContent.Add(new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, string.Format("{0}/api/values", baseAddress))));
+                batchContent.Add(new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, string.Format("{0}/foo/bar", baseAddress))));
+                batchContent.Add(new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, string.Format("{0}/api/values/1", baseAddress))));
+
+                using (Stream stdout = Console.OpenStandardOutput())
+                {
+                    Console.WriteLine("<<< REQUEST >>>");
+                    Console.WriteLine();
+                    Console.WriteLine(batchRequest);
+                    Console.WriteLine();
+                    batchContent.CopyToAsync(stdout).Wait();
+                    Console.WriteLine();
+
+                    var batchResponse = client.SendAsync(batchRequest).Result;
+
+                    Console.WriteLine("<<< RESPONSE >>>");
+                    Console.WriteLine();
+                    Console.WriteLine(batchResponse);
+                    Console.WriteLine();
+                    batchResponse.Content.CopyToAsync(stdout).Wait();
+                    Console.WriteLine();
+                    Console.WriteLine();
+                }
+
+                Console.WriteLine("Listenting at {0}...", baseAddress);
+                Console.ReadLine();
+            }
+        }
+
+        public void Configuration(IAppBuilder appBuilder)
+        {
+            var config = new HttpConfiguration();
+
+            HttpServer server = new HttpServer(config);
+
+            config.MapHttpAttributeRoutes();
+
+            //config.EnableSystemDiagnosticsTracing();
+
+            config.Routes.MapHttpBatchRoute("BatchRoute", "api/$batch", new DefaultHttpBatchHandler(server));
+
+            IHostBufferPolicySelector bufferPolicySelector = new OwinBufferPolicySelector();
+            appBuilder.Use(typeof(HttpMessageHandlerAdapter), server, bufferPolicySelector);
+        }
+    }
+
+    [RoutePrefix("api/values")]
+    public class ValuesController : ApiController
+    {
+        [HttpGet("")]
+        public IEnumerable<string> GetAll()
+        {
+            return new string[] { "value1", "value2" };
+        }
+
+        [HttpGet("{id}")]
+        public string GetSingle(int id)
+        {
+            return "value";
+        }
+
+        [HttpPost("")]
+        public void Post([FromBody]string value)
+        {
+        }
+
+        [HttpPut("{id}")]
+        public void Put(int id, [FromBody]string value)
+        {
+        }
+
+        [HttpDelete("{id}")]
+        public void Delete(int id)
+        {
+        }
+    }
+}
+
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
