@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>BatchKatanaHost</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Http.Hosting;
+using System.Web.Http.Owin;
+using Microsoft.Owin.Hosting;
+using Owin;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Web.Http.Batch;
+using System.Net.Http.Formatting;
+
+namespace SampleOwinApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string baseAddress = string.Format("http://{0}:9095", Environment.MachineName);
+
+            using (WebApp.Start<Program>(url: baseAddress))
+            {
+                HttpClient client = new HttpClient();
+                var response = client.GetAsync(baseAddress + "/api/values").Result;
+                Console.WriteLine(response.ToString());
+                Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+
+                Console.WriteLine();
+                Console.WriteLine("-------------------");
+                Console.WriteLine();
+                
+                HttpMessageContent embReq1 = new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, baseAddress + "/api/values"));
+                HttpMessageContent embReq2 = new HttpMessageContent(new HttpRequestMessage(HttpMethod.Post, baseAddress + "/api/values")
+                                                                            {
+                                                                                Content = new ObjectContent<string>("Hello!", new JsonMediaTypeFormatter())
+                                                                            });
+                HttpMessageContent embReq3 = new HttpMessageContent(new HttpRequestMessage(HttpMethod.Options, baseAddress + "/api/values"));
+
+                MultipartContent batchContent = new MultipartContent();
+                batchContent.Add(embReq1);
+                batchContent.Add(embReq2);
+                batchContent.Add(embReq3);
+
+                response = client.PostAsync(baseAddress + "/api/batch", batchContent).Result;
+                Console.WriteLine(response.ToString());
+                Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+
+                Console.WriteLine("Listenting at {0}...", baseAddress);
+                Console.ReadLine();
+            }
+        }
+
+        public void Configuration(IAppBuilder appBuilder)
+        {
+            var config = new HttpConfiguration();
+            
+            HttpServer server = new HttpServer(config);
+            config.MapHttpAttributeRoutes();
+            config.Routes.MapHttpBatchRoute("BatchRoute", "api/batch", new DefaultHttpBatchHandler(server));
+
+            appBuilder.Use(typeof(HttpMessageHandlerAdapter), server, new OwinBufferPolicySelector());
+        }
+    }
+
+    [RoutePrefix("api/values")]
+    public class ValuesController : ApiController
+    {
+        [HttpGet("")]
+        public IEnumerable<string> GetAll()
+        {
+            return new string[] { "value1", "value2" };
+        }
+
+        [HttpGet("{id}")]
+        public string GetSingle(int id)
+        {
+            return "value";
+        }
+
+        [HttpPost("")]
+        public string Echo([FromBody]string value)
+        {
+            return value;
+        }
+
+        [HttpPut("{id}")]
+        public void Put(int id, [FromBody]string value)
+        {
+        }
+
+        [HttpDelete("{id}")]
+        public void Delete(int id)
+        {
+        }
+    }
+}]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+
