@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>AttributedValuesControllerWithResults</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+    [RoutePrefix("api/values")]
+    public class ValuesController : ApiController
+    {
+        [HttpGet("")]
+        [ResponseType(typeof(IEnumerable<string>))]
+        public IHttpActionResult GetAll()
+        {
+            return Ok<IEnumerable<string>>(new string[] { "value1", "value2" });
+        }
+
+        [HttpGet("{id}")]
+        [ResponseType(typeof(string))]
+        public IHttpActionResult GetSingle(int id)
+        {
+            return Ok<string>("value");
+        }
+
+        [HttpPost("")]
+        [ResponseType(typeof(void))]
+        public IHttpActionResult Post([FromBody]string value)
+        {
+            return ResponseMessage(new HttpResponseMessage(HttpStatusCode.Created));
+        }
+
+        [HttpPut("{id}")]
+        [ResponseType(typeof(void))]
+        public IHttpActionResult Put(int id, [FromBody]string value)
+        {
+            return ResponseMessage(new HttpResponseMessage());
+        }
+
+        [HttpDelete("{id}")]
+        [ResponseType(typeof(void))]
+        public IHttpActionResult Delete(int id)
+        {
+            return ResponseMessage(new HttpResponseMessage());
+        }
+    }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+
