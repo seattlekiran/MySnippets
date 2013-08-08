@@ -46,10 +46,18 @@ namespace SampleOwinApp
                 Console.WriteLine("-------------------");
                 Console.WriteLine();
                 
+				response = client.PostAsJsonAsync(baseAddress + "/api/values", "Hello, World!").Result;
+                Console.WriteLine(response.ToString());
+                Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+
+                Console.WriteLine();
+                Console.WriteLine("-------------------");
+                Console.WriteLine();
+				
                 HttpMessageContent embReq1 = new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, baseAddress + "/api/values"));
                 HttpMessageContent embReq2 = new HttpMessageContent(new HttpRequestMessage(HttpMethod.Post, baseAddress + "/api/values")
                                                                             {
-                                                                                Content = new ObjectContent<string>("Hello!", new JsonMediaTypeFormatter())
+                                                                                Content = new ObjectContent<string>("Hello, World!", new JsonMediaTypeFormatter())
                                                                             });
                 HttpMessageContent embReq3 = new HttpMessageContent(new HttpRequestMessage(HttpMethod.Options, baseAddress + "/api/values"));
 
@@ -75,7 +83,7 @@ namespace SampleOwinApp
             config.MapHttpAttributeRoutes();
             config.Routes.MapHttpBatchRoute("BatchRoute", "api/batch", new DefaultHttpBatchHandler(server));
 
-            appBuilder.Use(typeof(HttpMessageHandlerAdapter), server, new OwinBufferPolicySelector());
+            appBuilder.UseWebApi(server);
         }
     }
 
