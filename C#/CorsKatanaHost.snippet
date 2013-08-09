@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>CorsKatanaHost</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Http.Hosting;
+using System.Web.Http.Owin;
+using Microsoft.Owin.Hosting;
+using Owin;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Web.Http.Cors;
+
+namespace SampleOwinApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string baseAddress = string.Format("http://{0}:9095", Environment.MachineName);
+
+            using (WebApp.Start<Program>(url: baseAddress))
+            {
+                HttpClient client = new HttpClient();
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Options, baseAddress + "/api/values");
+                request.Headers.Add("Origin", "http://foo.example");
+                request.Headers.Add("Access-Control-Request-Method", "POST");
+                request.Headers.Add("Access-Control-Request-Headers", "X-PINGOTHER");
+
+                HttpResponseMessage response = client.SendAsync(request).Result;
+
+                Console.WriteLine("Request:\n" + request.ToString());
+                Console.WriteLine("Response:\n" + response.ToString());
+                Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+
+                Console.WriteLine();
+                Console.WriteLine("----------------------------------");
+                Console.WriteLine();
+
+                request = new HttpRequestMessage(HttpMethod.Options, baseAddress + "/api/values");
+                request.Headers.Add("Origin", "http://foo.example");
+                request.Headers.Add("Access-Control-Request-Method", "GET");
+                request.Headers.Add("Access-Control-Request-Headers", "X-PINGOTHER");
+
+                response = client.SendAsync(request).Result;
+
+                Console.WriteLine("Request:\n" + request.ToString());
+                Console.WriteLine("Response:\n" + response.ToString());
+                Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+
+                //Console.WriteLine("Listenting at {0}...", baseAddress);
+                //Console.ReadLine();
+            }
+        }
+
+        public void Configuration(IAppBuilder appBuilder)
+        {
+            var config = new HttpConfiguration();
+            config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
+            config.MapHttpAttributeRoutes();
+
+            appBuilder.UseWebApi(config);
+        }
+    }
+
+    [RoutePrefix("api/values")]
+    public class ValuesController : ApiController
+    {
+        [AcceptVerbs("GET", "OPTIONS", RouteTemplate = "")]
+        public IEnumerable<string> GetAll()
+        {
+            return new string[] { "value1", "value2" };
+        }
+
+        [AcceptVerbs("GET", "OPTIONS", RouteTemplate = "{id}")]
+        public string GetSingle(int id)
+        {
+            return "value";
+        }
+
+        [EnableCors("http://abc.com", "*", "*")]
+        [AcceptVerbs("POST", "OPTIONS", RouteTemplate = "")]
+        public string Post([FromBody]string value)
+        {
+            return value;
+        }
+
+        [AcceptVerbs("PUT", "OPTIONS", RouteTemplate = "{id}")]
+        public void Put(int id, [FromBody]string value)
+        {
+        }
+
+        [AcceptVerbs("DELETE", "OPTIONS", RouteTemplate = "{id}")]
+        public void Delete(int id)
+        {
+        }
+    }
+}
+
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+
