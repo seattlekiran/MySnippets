@@ -82,7 +82,8 @@ namespace SampleOwinApp
             HttpServer server = new HttpServer(config);
             config.MapHttpAttributeRoutes();
             config.Routes.MapHttpBatchRoute("BatchRoute", "api/batch", new DefaultHttpBatchHandler(server));
-
+			config.EnsureInitialized();
+			
             appBuilder.UseWebApi(server);
         }
     }

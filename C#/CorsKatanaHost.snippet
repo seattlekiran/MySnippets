@@ -73,6 +73,7 @@ namespace SampleOwinApp
             var config = new HttpConfiguration();
             config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
             config.MapHttpAttributeRoutes();
+			config.EnsureInitialized();
 
             appBuilder.UseWebApi(config);
         }
