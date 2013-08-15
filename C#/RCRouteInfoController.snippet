@@ -30,7 +30,7 @@ namespace SampleOwinApp
     {
         StringBuilder routesInfoBuilder = new StringBuilder();
 
-        [HttpGet("api/routes")]
+        [Route("api/routes")]
         public HttpResponseMessage Get()
         {
             string str = GetRoutesInfo(Request.GetConfiguration().Routes);

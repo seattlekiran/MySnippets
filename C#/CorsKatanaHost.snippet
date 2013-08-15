@@ -82,31 +82,31 @@ namespace SampleOwinApp
     [RoutePrefix("api/values")]
     public class ValuesController : ApiController
     {
-        [AcceptVerbs("GET", "OPTIONS", RouteTemplate = "")]
+        [Route]
         public IEnumerable<string> GetAll()
         {
             return new string[] { "value1", "value2" };
         }
 
-        [AcceptVerbs("GET", "OPTIONS", RouteTemplate = "{id}")]
+        [Route("{id}")]
         public string GetSingle(int id)
         {
             return "value";
         }
 
         [EnableCors("http://abc.com", "*", "*")]
-        [AcceptVerbs("POST", "OPTIONS", RouteTemplate = "")]
+        [Route]
         public string Post([FromBody]string value)
         {
             return value;
         }
 
-        [AcceptVerbs("PUT", "OPTIONS", RouteTemplate = "{id}")]
+        [Route("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        [AcceptVerbs("DELETE", "OPTIONS", RouteTemplate = "{id}")]
+        [Route("{id}")]
         public void Delete(int id)
         {
         }

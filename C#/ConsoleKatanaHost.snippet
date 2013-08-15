@@ -60,29 +60,29 @@ namespace SampleOwinApp
     [RoutePrefix("api/values")]
     public class ValuesController : ApiController
     {
-        [HttpGet("")]
+        [Route("")]
         public IEnumerable<string> GetAll()
         {
             return new string[] { "value1", "value2" };
         }
 
-        [HttpGet("{id}")]
+        [Route("{id}")]
         public string GetSingle(int id)
         {
             return "value";
         }
 
-        [HttpPost("")]
+        [Route("")]
         public void Post([FromBody]string value)
         {
         }
 
-        [HttpPut("{id}")]
+        [Route("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        [HttpDelete("{id}")]
+        [Route("{id}")]
         public void Delete(int id)
         {
         }

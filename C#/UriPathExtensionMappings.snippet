@@ -7,14 +7,18 @@
     <Snippet>
       <Code Language="CSharp">
         <![CDATA[ 
-        config.Routes.MapHttpRoute(
-                name: "DefaultApiWithExtension2",
-                routeTemplate: "api/{controller}/{id}.{ext}"
-            );
+       config.Routes.MapHttpRoute(
+                    name: "DefaultApiWithExtension2",
+                    routeTemplate: "api/{controller}/{id}.{ext}",
+                    defaults:null,
+                    constraints: new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) }
+                );
 
             config.Routes.MapHttpRoute(
                 name: "DefaultApiWithExtension1",
-                routeTemplate: "api/{controller}.{ext}");
+                routeTemplate: "api/{controller}.{ext}",
+                defaults: null,
+                constraints: new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
 
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
