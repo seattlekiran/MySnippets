@@ -12,8 +12,8 @@
         </Literal>
       </Declarations>
       <Code Language="CSharp">
-        <![CDATA[ 
-        using System;
+        <![CDATA[
+		using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,12 +38,10 @@ namespace SampleOwinApp
             return new HttpResponseMessage() { Content = new StringContent(str) };
         }
 
-        IDictionary<string, IHttpRoute> innerDictionary = null;
-
         private string GetRoutesInfo(HttpRouteCollection webApiRoutes)
         {
             // This is for getting the route names
-            innerDictionary = GetInnerDictionary(webApiRoutes);
+            IDictionary<string, IHttpRoute> innerDictionary = GetInnerDictionary(webApiRoutes);
 
             routesInfoBuilder.AppendLine();
             routesInfoBuilder.AppendLine();
@@ -51,7 +49,7 @@ namespace SampleOwinApp
             routesInfoBuilder.AppendLine();
             routesInfoBuilder.AppendLine("-----------------------------");
 
-            for(int i = 1; i <= webApiRoutes.Count; i++)
+            for (int i = 1; i <= webApiRoutes.Count; i++)
             {
                 IHttpRoute route = webApiRoutes[i - 1];
 
@@ -61,19 +59,21 @@ namespace SampleOwinApp
                     routesInfoBuilder.AppendLine();
                     routesInfoBuilder.AppendFormat("{0}.", i);
                     routesInfoBuilder.AppendLine("RouteType:" + route.GetType().Name);
-                    GetRouteInfo(route);
+
+                    IDictionary<string, IHttpRoute> dict = GetInnerDictionaryFromRouteCollectionRoute((IEnumerable<IHttpRoute>)route);
+                    GetRouteInfo(dict, route);
 
                     IEnumerable<IHttpRoute> attributeRoutes = (IEnumerable<IHttpRoute>)route;
 
                     int subRouteCount = 1;
-                    foreach(IHttpRoute attribRoute in attributeRoutes)
+                    foreach (IHttpRoute attribRoute in attributeRoutes)
                     {
                         routesInfoBuilder.AppendLine();
                         routesInfoBuilder.Append("\t");
                         routesInfoBuilder.AppendFormat("{0}.", subRouteCount);
                         routesInfoBuilder.AppendLine("RouteType:" + attribRoute.GetType().Name);
                         routesInfoBuilder.Append("\t");
-                        GetRouteInfo(attribRoute);
+                        GetRouteInfo(dict, attribRoute);
 
                         subRouteCount++;
                     }
@@ -83,17 +83,17 @@ namespace SampleOwinApp
                     routesInfoBuilder.AppendLine();
                     routesInfoBuilder.AppendFormat("{0}.", i);
                     routesInfoBuilder.AppendLine("RouteType:" + route.GetType().Name);
-                    GetRouteInfo(route);
+                    GetRouteInfo(innerDictionary, route);
                 }
             }
 
             return routesInfoBuilder.ToString();
         }
 
-        private void GetRouteInfo(IHttpRoute route)
+        private void GetRouteInfo(IDictionary<string, IHttpRoute> innerDictionary, IHttpRoute route)
         {
             routesInfoBuilder.AppendFormat("config.Routes.MapHttpRoute(\"{0}\", \"{1}\", new {{ {2} }}, new {{ {3} }}, new {{ {4} }});",
-                        GetRouteName(route),
+                        GetRouteName(innerDictionary, route),
                         route.RouteTemplate,
                         GetRouteDefaults(route.Defaults),
                         GetRouteConstraints(route.Constraints),
@@ -200,15 +200,33 @@ namespace SampleOwinApp
 
             IDictionary<string, IHttpRoute> innerDictionary = null;
 
-            if(fi != null)
-            { 
+            if (fi != null)
+            {
                 innerDictionary = (IDictionary<string, IHttpRoute>)fi.GetValue(routeColl);
             }
 
             return innerDictionary;
         }
 
-        private string GetRouteName(IHttpRoute route)
+
+        private IDictionary<string, IHttpRoute> GetInnerDictionaryFromRouteCollectionRoute(IEnumerable<IHttpRoute> routeCollectionRoute)
+        {
+            FieldInfo fi = routeCollectionRoute.GetType().GetField("_subRoutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            IDictionary<string, IHttpRoute> innerDictionary = null;
+            HttpRouteCollection subRoutes = null;
+
+            if (fi != null)
+            {
+                subRoutes = (HttpRouteCollection)fi.GetValue(routeCollectionRoute);
+
+                innerDictionary = GetInnerDictionary(subRoutes);
+            }
+
+            return innerDictionary;
+        }
+
+        private string GetRouteName(IDictionary<string, IHttpRoute> innerDictionary, IHttpRoute route)
         {
             if (innerDictionary != null)
             {
@@ -218,15 +236,13 @@ namespace SampleOwinApp
                     {
                         return key;
                     }
-                }  
+                }
             }
 
             return "routeName";
         }
     }
-}
-
-        ]]>
+}]]>
       </Code>
     </Snippet>
   </CodeSnippet>
