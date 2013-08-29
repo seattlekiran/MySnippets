@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>CustomersAttributedController</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+            [RoutePrefix("api/customers")]
+    [Route("{id?}")]
+    public class CustomersController : ApiController
+    {
+        public string GetAllCustomers()
+        {
+            return "GetAllCustomers";
+        }
+
+        public string GetCustomer(int id)
+        {
+            return "GetCustomer:" + id;
+        }
+
+        public string GetCustomer(int id, string name)
+        {
+            return "GetCustomer:" + id + ":" + name;
+        }
+
+        public string CreateCustomer([FromBody]string value)
+        {
+            return "CreateCustomer:" + value;
+        }
+
+        [HttpPut]
+        public string UpdateCustomer(int id, [FromBody]string value)
+        {
+            return "UpdateCustoemr:" + id + ":" + value;
+        }
+
+        public string DeleteCustomer(int id)
+        {
+            return "DeleteCustomer:" + id;
+        }
+
+        [Route("{id}/orders")]
+        public string GetOrdersOfCustomer(int id)
+        {
+            return "GetOrdersOfCustomer:" + id;
+        }
+    }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+
