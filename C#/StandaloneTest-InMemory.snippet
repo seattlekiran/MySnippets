@@ -15,46 +15,95 @@
         <![CDATA[using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Controllers;
-using System.Web.Http.Filters;
-using System.Web.Http.SelfHost;
 using Xunit;
-using Xunit.Extensions;
 
-namespace MvcWebApi.MainTests.Tests.$testname$Tests
+namespace Tests
 {
     public class SampleTests
     {
         string HelloInXmlDcs = "<string xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">Hello</string>";
 
         string HelloInJson = "\"Hello\"";
-        
+
         string baseAddress = string.Format("http://dummyhost/", Environment.MachineName);
+
+        [Fact]
+        public void GetTest()
+        {
+            // Server
+            HttpConfiguration config = new HttpConfiguration();
+            config.Routes.MapHttpRoute("Default", "{controller}/{action}/{id}", new { controller = "SampleTests", id = RouteParameter.Optional });
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+
+            HttpServer server = new HttpServer(config);
+
+            //Client
+            HttpMessageInvoker messageInvoker = new HttpMessageInvoker(new InMemoryHttpContentSerializationHandler(server));
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = new Uri(baseAddress + "SampleTests/GetString");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            request.Method = HttpMethod.Get;
+
+            using (HttpResponseMessage response = messageInvoker.SendAsync(request, new CancellationToken()).Result)
+            {
+                Assert.NotNull(response.Content);
+                Assert.NotNull(response.Content.Headers.ContentType);
+                Assert.Equal<string>("application/xml; charset=utf-8", response.Content.Headers.ContentType.ToString());
+                Assert.Equal<string>(HelloInXmlDcs, response.Content.ReadAsStringAsync().Result);
+            }
+        }
+
+        [Fact]
+        public void GetTestWithAttributedRoutes()
+        {
+            // Server
+            HttpConfiguration config = new HttpConfiguration();
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+            config.MapHttpAttributeRoutes();
+            config.EnsureInitialized();
+
+            HttpServer server = new HttpServer(config);
+
+            //Client
+            HttpMessageInvoker messageInvoker = new HttpMessageInvoker(new InMemoryHttpContentSerializationHandler(server));
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = new Uri(baseAddress + "api/values");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            request.Method = HttpMethod.Get;
+
+            using (HttpResponseMessage response = messageInvoker.SendAsync(request, new CancellationToken()).Result)
+            {
+                Assert.NotNull(response.Content);
+                Assert.NotNull(response.Content.Headers.ContentType);
+                Assert.Equal<string>("application/xml; charset=utf-8", response.Content.Headers.ContentType.ToString());
+                Assert.Equal<string>(HelloInXmlDcs, response.Content.ReadAsStringAsync().Result);
+            }
+        }
 
         [Fact]
         public void PostTest()
         {
             // Server
-            HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
-            config.Routes.MapHttpRoute("Default", "{controller}/{action}/{id}", new { controller = "$testname$Tests", id = RouteParameter.Optional });
+            HttpConfiguration config = new HttpConfiguration();
+            config.Routes.MapHttpRoute("Default", "{controller}/{action}/{id}", new { controller = "SampleTests", id = RouteParameter.Optional });
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
 
-            HttpSelfHostServer server = new HttpSelfHostServer(config);
+            HttpServer server = new HttpServer(config);
 
             // Client
             HttpMessageInvoker messageInvoker = new HttpMessageInvoker(new InMemoryHttpContentSerializationHandler(server));
 
             HttpRequestMessage request = new HttpRequestMessage();
             request.Content = new ObjectContent<string>("Hello", new XmlMediaTypeFormatter());
-            request.RequestUri = new Uri(baseAddress + "$testname$Tests/PostString");
+            request.RequestUri = new Uri(baseAddress + "SampleTests/PostString");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
             request.Method = HttpMethod.Post;
 
@@ -68,22 +117,24 @@ namespace MvcWebApi.MainTests.Tests.$testname$Tests
         }
 
         [Fact]
-        public void GetTest()
+        public void PostTestWithAttributedRoutes()
         {
             // Server
-            HttpSelfHostConfiguration config = new HttpSelfHostConfiguration(baseAddress);
-            config.Routes.MapHttpRoute("Default", "{controller}/{action}/{id}", new { controller = "$testname$Tests", id = RouteParameter.Optional });
+            HttpConfiguration config = new HttpConfiguration();
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+            config.MapHttpAttributeRoutes();
+            config.EnsureInitialized();
 
-            HttpSelfHostServer server = new HttpSelfHostServer(config);
+            HttpServer server = new HttpServer(config);
 
-            //Client
+            // Client
             HttpMessageInvoker messageInvoker = new HttpMessageInvoker(new InMemoryHttpContentSerializationHandler(server));
 
             HttpRequestMessage request = new HttpRequestMessage();
-            request.RequestUri = new Uri(baseAddress + "$testname$Tests/GetString");
+            request.Content = new ObjectContent<string>("Hello", new XmlMediaTypeFormatter());
+            request.RequestUri = new Uri(baseAddress + "api/values");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
-            request.Method = HttpMethod.Get;
+            request.Method = HttpMethod.Post;
 
             using (HttpResponseMessage response = messageInvoker.SendAsync(request, new CancellationToken()).Result)
             {
@@ -95,7 +146,7 @@ namespace MvcWebApi.MainTests.Tests.$testname$Tests
         }
     }
 
-    public class $testname$TestsController : ApiController
+    public class SampleTestsController : ApiController
     {
         public string PostString([FromBody]string input)
         {
@@ -107,62 +158,78 @@ namespace MvcWebApi.MainTests.Tests.$testname$Tests
             return "Hello";
         }
     }
+    
+    [RoutePrefix("api/values")]
+    public class ValuesController : ApiController
+    {
+        [Route("")]
+        public string GetAll()
+        {
+            return "Hello";
+        }
+
+        [Route("")]
+        public string Post([FromBody]string value)
+        {
+            return value;
+        }
+    }
 
     public class InMemoryHttpContentSerializationHandler : DelegatingHandler
-{
-    public InMemoryHttpContentSerializationHandler()
     {
-    }
-
-    public InMemoryHttpContentSerializationHandler(HttpMessageHandler innerHandler)
-        : base(innerHandler)
-    {
-    }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        request.Content = await ConvertToStreamContentAsync(request.Content);
-
-        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
-
-        response.Content = await ConvertToStreamContentAsync(response.Content);
-
-        return response;
-    }
-
-    private async Task<StreamContent> ConvertToStreamContentAsync(HttpContent originalContent)
-    {
-        if (originalContent == null)
+        public InMemoryHttpContentSerializationHandler()
         {
-            return null;
         }
 
-        StreamContent streamContent = originalContent as StreamContent;
-
-        if (streamContent != null)
+        public InMemoryHttpContentSerializationHandler(HttpMessageHandler innerHandler)
+            : base(innerHandler)
         {
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            request.Content = await ConvertToStreamContentAsync(request.Content);
+
+            HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+
+            response.Content = await ConvertToStreamContentAsync(response.Content);
+
+            return response;
+        }
+
+        private async Task<StreamContent> ConvertToStreamContentAsync(HttpContent originalContent)
+        {
+            if (originalContent == null)
+            {
+                return null;
+            }
+
+            StreamContent streamContent = originalContent as StreamContent;
+
+            if (streamContent != null)
+            {
+                return streamContent;
+            }
+
+            MemoryStream ms = new MemoryStream();
+
+            await originalContent.CopyToAsync(ms);
+
+            // Reset the stream position back to 0 as in the previous CopyToAsync() call,
+            // a formatter for example, could have made the position to be at the end
+            ms.Position = 0;
+
+            streamContent = new StreamContent(ms);
+
+            // copy headers from the original content
+            foreach (KeyValuePair<string, IEnumerable<string>> header in originalContent.Headers)
+            {
+                streamContent.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
             return streamContent;
         }
-
-        MemoryStream ms = new MemoryStream();
-
-        await originalContent.CopyToAsync(ms);
-
-        // Reset the stream position back to 0 as in the previous CopyToAsync() call,
-        // a formatter for example, could have made the position to be at the end
-        ms.Position = 0;
-
-        streamContent = new StreamContent(ms);
-
-        // copy headers from the original content
-        foreach (KeyValuePair<string, IEnumerable<string>> header in originalContent.Headers)
-        {
-            streamContent.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        }
-
-        return streamContent;
     }
-}
 }
         ]]>
       </Code>
