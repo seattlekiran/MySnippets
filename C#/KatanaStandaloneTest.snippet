@@ -23,12 +23,14 @@ using System.Web.Http;
 using Microsoft.Owin.Hosting;
 using Owin;
 using Xunit;
-using Xunit.Extensions;
-    
-            namespace MvcWebApi.MainTests.Tests.$testname$Tests
+
+namespace Repro.Tests.$testname$
 {
-    public class $testname$Tests : IDisposable
+    public class $testname$ : IDisposable
     {
+        private IDisposable server = null;
+        private string baseAddress = string.Format("http://{0}:9090/", Environment.MachineName);
+
         [Fact]
         public void PostTest()
         {
@@ -38,7 +40,7 @@ using Xunit.Extensions;
 
             HttpRequestMessage request = new HttpRequestMessage();
             request.Content = new ObjectContent<string>("Hello", new JsonMediaTypeFormatter());
-            request.RequestUri = new Uri(this.BaseAddress + "api/$testname$Tests/PostString");
+            request.RequestUri = new Uri(baseAddress + "api/$testname$");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
             request.Method = HttpMethod.Post;
 
@@ -59,7 +61,7 @@ using Xunit.Extensions;
             HttpClient httpClient = new HttpClient();
 
             HttpRequestMessage request = new HttpRequestMessage();
-            request.RequestUri = new Uri(this.BaseAddress + "api/$testname$Tests/GetString");
+            request.RequestUri = new Uri(baseAddress + "api/$testname$");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
             request.Method = HttpMethod.Get;
 
@@ -69,14 +71,12 @@ using Xunit.Extensions;
                 Assert.NotNull(response.Content.Headers.ContentType);
                 Assert.Equal<string>("application/xml; charset=utf-8", response.Content.Headers.ContentType.ToString());
                 Assert.Equal<string>(expectedResponse, response.Content.ReadAsStringAsync().Result);
-            }                
+            }
         }
-        
-        private IDisposable server = null;
 
-        public $testname$Tests()
+        public $testname$()
         {
-            server = WebApp.Start(BaseAddress, Configuration);
+            server = WebApp.Start(baseAddress, Configuration);
         }
 
         public void Configuration(IAppBuilder appBuilder)
@@ -84,6 +84,8 @@ using Xunit.Extensions;
             var config = new HttpConfiguration();
 
             config.MapHttpAttributeRoutes();
+
+            config.EnsureInitialized();
 
             appBuilder.UseWebApi(config);
         }
@@ -95,24 +97,17 @@ using Xunit.Extensions;
                 server.Dispose();
             }
         }
-
-        protected virtual string BaseAddress
-        {
-            get { return string.Format("http://{0}:9090/", Environment.MachineName); }
-        }
     }
 
-    [RoutePrefix("api/$testname$Tests")]
-    public class $testname$TestsController : ApiController
+    [Route("api/$testname$")]
+    public class $testname$Controller : ApiController
     {
-        [HttpPost("PostString")]
-        public string PostString([FromBody]string input)
+        public string Post([FromBody]string input)
         {
             return input;
         }
 
-        [HttpGet("GetString")]
-        public string GetString()
+        public string Get()
         {
             return "Hello";
         }
