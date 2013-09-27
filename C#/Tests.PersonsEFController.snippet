@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Tests.PersonsEFController</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Net.Http;
+using System.Net;
+
+namespace Tests
+{
+    [TestClass]
+    public class PersonsTest
+    {
+        HttpClient client = null;
+        HttpResponseMessage response = null;
+        string baseAddress = 
+
+        public PersonsTest()
+        {
+            client = new HttpClient();
+            client.BaseAddress = new Uri(baseAddress);
+        }
+
+        [TestMethod]
+        public void Test()
+        {
+            //---------------- Create Person ---------------------------
+            Person personExpected = new Person();
+            personExpected.Name = "James";
+
+            response = client.PostAsJsonAsync<Person>("api/PeopleAsync", personExpected).Result;
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+            Assert.IsNotNull(response.Headers.Location);
+
+            Uri location = response.Headers.Location;
+            //---------------- Get Person ---------------------------
+            response = client.GetAsync(location).Result;
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Person personActual = response.Content.ReadAsAsync<Person>().Result;
+            Assert.IsNotNull(personActual);
+            Assert.AreEqual(personExpected.Name, personActual.Name);
+
+            //---------------- Update Person ---------------------------
+            personExpected.Id = personActual.Id;
+            personExpected.Name = "James Newton";
+            response = client.PutAsJsonAsync<Person>(location, personExpected).Result;
+            Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
+
+            response = client.GetAsync(location).Result;
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            personActual = response.Content.ReadAsAsync<Person>().Result;
+
+            Assert.IsNotNull(personActual);
+            Assert.AreEqual(personExpected.Id, personActual.Id);
+            Assert.AreEqual(personExpected.Name, personActual.Name);
+
+            //---------------- Get All Persons ---------------------------
+            response = client.GetAsync("api/PeopleAsync").Result;
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Person[] persons = response.Content.ReadAsAsync<Person[]>().Result;
+
+            Assert.IsNotNull(persons);
+            Assert.AreEqual(1, persons.Length);
+            personActual = persons[0];
+            Assert.AreEqual(personExpected.Id, personActual.Id);
+            Assert.AreEqual(personExpected.Name, personActual.Name);
+
+            //---------------- Delete Person ---------------------------
+            response = client.DeleteAsync(location).Result;
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            personActual = response.Content.ReadAsAsync<Person>().Result;
+            Assert.IsNotNull(personActual);
+            Assert.AreEqual(personExpected.Id, personActual.Id);
+            Assert.AreEqual(personExpected.Name, personActual.Name);
+
+            response = client.GetAsync("api/PeopleAsync").Result;
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            persons = response.Content.ReadAsAsync<Person[]>().Result;
+
+            Assert.IsNotNull(persons);
+            Assert.AreEqual(0, persons.Length);
+        }
+    }
+}
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
