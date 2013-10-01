@@ -25,7 +25,8 @@ namespace Tests
     {
         HttpClient client = null;
         HttpResponseMessage response = null;
-        string baseAddress = 
+        string baseAddress = ;
+        string controllerRoute = "api/
 
         public PersonsTest()
         {
@@ -40,7 +41,7 @@ namespace Tests
             Person personExpected = new Person();
             personExpected.Name = "James";
 
-            response = client.PostAsJsonAsync<Person>("api/PeopleAsync", personExpected).Result;
+            response = client.PostAsJsonAsync<Person>(controllerRoute, personExpected).Result;
             Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
             Assert.IsNotNull(response.Headers.Location);
 
@@ -67,7 +68,7 @@ namespace Tests
             Assert.AreEqual(personExpected.Name, personActual.Name);
 
             //---------------- Get All Persons ---------------------------
-            response = client.GetAsync("api/PeopleAsync").Result;
+            response = client.GetAsync(controllerRoute).Result;
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Person[] persons = response.Content.ReadAsAsync<Person[]>().Result;
 
@@ -85,7 +86,7 @@ namespace Tests
             Assert.AreEqual(personExpected.Id, personActual.Id);
             Assert.AreEqual(personExpected.Name, personActual.Name);
 
-            response = client.GetAsync("api/PeopleAsync").Result;
+            response = client.GetAsync(controllerRoute).Result;
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             persons = response.Content.ReadAsAsync<Person[]>().Result;
 
