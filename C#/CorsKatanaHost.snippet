@@ -79,34 +79,29 @@ namespace SampleOwinApp
         }
     }
 
-    [RoutePrefix("api/values")]
+    [Route("api/values/{id?}")]
     public class ValuesController : ApiController
     {
-        [Route]
         public IEnumerable<string> GetAll()
         {
             return new string[] { "value1", "value2" };
         }
 
-        [Route("{id}")]
         public string GetSingle(int id)
         {
             return "value";
         }
 
         [EnableCors("http://abc.com", "*", "*")]
-        [Route]
         public string Post([FromBody]string value)
         {
             return value;
         }
 
-        [Route("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        [Route("{id}")]
         public void Delete(int id)
         {
         }
