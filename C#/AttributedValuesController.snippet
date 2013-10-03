@@ -13,32 +13,27 @@
       </Declarations>
       <Code Language="CSharp">
         <![CDATA[ 
-        [RoutePrefix("api/values")]
+        [RoutePrefix("api/values/{id?}")]
     public class ValuesController : ApiController
     {
-        [Route("")]
         public IEnumerable<string> GetAll()
         {
             return new string[] { "value1", "value2" };
         }
 
-        [Route("{id}")]
         public string GetSingle(int id)
         {
             return "value";
         }
 
-        [Route("")]
         public void Post([FromBody]string value)
         {
         }
 
-        [Route("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        [Route("{id}")]
         public void Delete(int id)
         {
         }
