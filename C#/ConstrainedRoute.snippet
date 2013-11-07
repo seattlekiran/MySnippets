@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>ConstrainedRoute</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ using System.Linq;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Web.Http.Routing;
+using System;
+
+namespace RuntimeOwinApp
+{
+
+    public class CustomRouteAttribute : RouteProviderAttribute
+    {
+        public CustomRouteAttribute()
+            : base(null)
+        {
+        }
+
+        public CustomRouteAttribute(string routeTemplate)
+            : base(routeTemplate)
+        {
+        }
+
+        public string Version { get; set; }
+
+        public override HttpRouteValueDictionary Constraints
+        {
+            get
+            {
+                HttpRouteValueDictionary baseConstraints = base.Constraints;
+
+                if (!string.IsNullOrEmpty(Version))
+                {
+                    if (baseConstraints == null)
+                    {
+                        baseConstraints = new HttpRouteValueDictionary();
+                    }
+
+                    baseConstraints.Add("version", new VersionConstraint(Version));
+                }
+
+                return baseConstraints;
+            }
+        }
+    }
+
+    public class VersionConstraint : IHttpRouteConstraint
+    {
+        public VersionConstraint(string version)
+        {
+            this.Version = version;
+        }
+
+        public string Version { get; private set; }
+
+        public bool Match(HttpRequestMessage request, IHttpRoute route, string parameterName, IDictionary<string, object> values,
+            HttpRouteDirection routeDirection)
+        {
+            IEnumerable<string> headerVals = null;
+            if (request.Headers.TryGetValues("version", out headerVals))
+            {
+                if (headerVals != null)
+                {
+                    return String.Compare(headerVals.First(), Version, ignoreCase: true) == 0;
+                }
+            }
+
+            return false;
+        }
+    }
+        
+}
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+

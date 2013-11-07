@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>CustomExceptionHandler</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.Http.ExceptionHandling;
+using System.Web.Http.Results;
+
+namespace ExceptionHandler
+{
+    public enum ExceptionHandlingBehavior
+    {
+        Default,
+        ModifyExistingResponseMessage,
+        ReplaceResponseMessage,
+        ForceToBeUnhandled
+    }
+
+    public class CustomExceptionHandler : IExceptionHandler
+    {
+        private ExceptionHandlingBehavior exceptionHandlingBehavior;
+
+        public CustomExceptionHandler(ExceptionHandlingBehavior exceptionHandlingBehavior)
+        {
+            this.exceptionHandlingBehavior = exceptionHandlingBehavior;
+        }
+
+        public async Task HandleAsync(ExceptionHandlerContext context, CancellationToken cancellationToken)
+        {
+            HttpResponseMessage response = null;
+
+            switch(exceptionHandlingBehavior)
+            {
+                case ExceptionHandlingBehavior.Default:
+                    //do not do anything
+                    break;
+
+                case ExceptionHandlingBehavior.ForceToBeUnhandled:
+                    context.Result = null;
+                    break;
+
+                case ExceptionHandlingBehavior.ModifyExistingResponseMessage:
+                    response = await context.Result.ExecuteAsync(cancellationToken);
+                    response.Headers.Add("CustomExceptionHandler", "Modified at CustomExceptionHandler");
+
+                    break;
+
+                case ExceptionHandlingBehavior.ReplaceResponseMessage:
+                    response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                    response.Content = new StringContent("Custom message from CustomExceptionHandler");
+                    context.Result = new ResponseMessageResult(response);
+                    break;
+            }
+        }
+    }
+}
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>PushStreamContentKatanaHost</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using Microsoft.Owin.Hosting;
+using Owin;
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Web.Http;
+
+namespace SampleOwinApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string baseAddress = string.Format("http://{0}:9096", Environment.MachineName);
+
+            using (WebApp.Start<Program>(url: baseAddress))
+            {
+                HttpClient client = new HttpClient();
+                HttpResponseMessage response = client.GetAsync(baseAddress + "/api/values/pushstreamcontent", HttpCompletionOption.ResponseHeadersRead).Result;
+
+                Console.WriteLine(response.ToString());
+                Console.WriteLine();
+
+                Stream respStream = response.Content.ReadAsStreamAsync().Result;
+                using(respStream)
+                {
+                    StreamReader sr = new StreamReader(respStream);
+                    string line = null;
+                    while((line = sr.ReadLine()) != null)
+                    {
+                        Console.WriteLine(line);
+                    }
+                }
+            }
+        }
+
+        public void Configuration(IAppBuilder appBuilder)
+        {
+            var config = new HttpConfiguration();
+
+            config.MapHttpAttributeRoutes();
+
+            config.EnsureInitialized();
+
+            appBuilder.UseWebApi(config);
+        }
+    }
+    
+    [RoutePrefix("api/values")]
+    public class ValuesController : ApiController
+    {
+        [Route("pushstreamcontent")]
+        public HttpResponseMessage GetByPushStreamContent()
+        {
+            HttpResponseMessage resp = new HttpResponseMessage();
+            resp.Content = new PushStreamContent(async (respStream, content, context) =>
+            {
+                using (StreamWriter sw = new StreamWriter(respStream))
+                {
+                    for (int i = 1; i <= 100; i++)
+                    {
+                        await sw.WriteLineAsync("value:" + i);
+                        await sw.FlushAsync();
+                        await Task.Delay(millisecondsDelay: 100);
+                    }
+                }
+            });
+
+            return resp;
+        }
+    }
+}
+
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
+
