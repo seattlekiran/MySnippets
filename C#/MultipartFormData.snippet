@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>MultipartFormData</Title>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID></ID>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[ 
+        using Microsoft.Owin.Hosting;
+using Owin;
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.Http;
+
+namespace SampleOwinApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string baseAddress = string.Format("http://{0}:9095", Environment.MachineName);
+
+            using (WebApp.Start<Program>(url: baseAddress))
+            {
+                HttpClient client = new HttpClient();
+
+                HttpRequestMessage request = new HttpRequestMessage();
+
+                MultipartFormDataContent mfdc = new MultipartFormDataContent();
+                mfdc.Add(new StringContent("Hell, World!"), "greeting");
+                mfdc.Add(new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes("This is from a file"))), "Data", "File1.txt");
+
+                HttpResponseMessage response = client.PostAsync(baseAddress + "/api/values", mfdc).Result;
+
+                Console.WriteLine(response.ToString());
+                Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+
+                //Console.WriteLine("Listenting at {0}...", baseAddress);
+                //Console.ReadLine();
+            }
+        }
+
+        public void Configuration(IAppBuilder appBuilder)
+        {
+            var config = new HttpConfiguration();
+
+            config.MapHttpAttributeRoutes();
+
+            config.EnsureInitialized();
+
+            appBuilder.UseWebApi(config);
+        }
+    }
+
+    [RoutePrefix("api/values")]
+    public class ValuesController : ApiController
+    {
+        [Route]
+        public async Task Post()
+        {
+            if(!Request.Content.IsMimeMultipartContent())
+            {
+                throw new HttpResponseException(HttpStatusCode.BadRequest);
+            }
+
+            MultipartFormDataStreamProvider prov = await Request.Content.ReadAsMultipartAsync<MultipartFormDataStreamProvider>(new MultipartFormDataStreamProvider(@"C:\uploadedfiles"));
+
+            Console.WriteLine();
+            Console.WriteLine("FormData:");
+            Console.WriteLine("---------");
+            foreach(string key in prov.FormData.Keys)
+            {
+                Console.WriteLine(prov.FormData[key].ToString());
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("FileData:");
+            Console.WriteLine("---------");
+            foreach(MultipartFileData mfd in prov.FileData)
+            {
+                Console.WriteLine("LocalFileName:" + mfd.LocalFileName);
+                Console.WriteLine("UploadedFileName:" + mfd.Headers.ContentDisposition.FileName);
+            }
+            Console.WriteLine();
+        }
+    }
+}
+
+
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

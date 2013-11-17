@@ -36,7 +36,9 @@ namespace SampleOwinApp
             using (WebApp.Start<Program>(url: baseAddress))
             {
                 HttpClient client = new HttpClient();
-                HttpResponseMessage response = client.GetAsync(baseAddress + "/api/values").Result;
+                HttpResponseMessage response = null;
+				
+				response = client.GetAsync(baseAddress + "/api/values").Result;
 				Console.WriteLine(response.ToString());
                 Console.WriteLine(response.Content.ReadAsStringAsync().Result);
 				
